@@ -70,6 +70,7 @@ app.include_router(dictionary_router)
 
 
 @app.get("/health")
+@app.get("/api/healthz")
 def health_check():
     return {"status": "ok"}
 
