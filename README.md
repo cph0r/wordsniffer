@@ -65,16 +65,18 @@ Open **http://localhost:8000/python-api/docs** for the interactive API docs (Swa
 If you prefer running things natively:
 
 ```bash
-# Backend
+# Backend (reads PORT=8000 from .env)
 cd artifacts/python-api
 pip install -r requirements.txt
 export DATABASE_URL="postgresql://user:pass@localhost:5432/wordsniffer"
 uvicorn main:app --host 0.0.0.0 --port 8000
 
-# Frontend (in a separate terminal)
+# Frontend (in a separate terminal, defaults to port 5173)
 pnpm install
 pnpm --filter @workspace/frontend run dev
 ```
+
+> **Note:** The frontend defaults to port **5173** when `PORT` is not set. The `.env` file sets `PORT=8000` for the backend — both can run simultaneously without conflicts.
 
 ---
 
