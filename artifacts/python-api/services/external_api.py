@@ -109,7 +109,11 @@ async def fetch_definitions_batch(words: list[str]) -> list[dict]:
     final: list[dict] = []
     for i, result in enumerate(results):
         if isinstance(result, Exception):
-            logger.warning("Exception fetching definition for '%s': %s", words[i], result)
+            logger.warning(
+                "Exception fetching definition for '%s': %s",
+                words[i],
+                result,
+            )
             final.append(_not_found_result(words[i]))
         else:
             final.append(result)

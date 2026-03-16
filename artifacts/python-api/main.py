@@ -2,7 +2,6 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-import httpx
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -10,6 +9,7 @@ from fastapi.responses import JSONResponse
 from db import init_db
 from routes.dictionary import router as dictionary_router
 from routes.fetch import router as fetch_router
+from routes.paragraphs import router as paragraphs_router
 from routes.search import router as search_router
 from services.external_api import http_client
 
@@ -58,6 +58,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 
 app.include_router(fetch_router)
+app.include_router(paragraphs_router)
 app.include_router(search_router)
 app.include_router(dictionary_router)
 

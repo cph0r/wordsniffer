@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+DEFAULT_LIMIT = 200
+MAX_LIMIT = 1000
+
 
 @router.get("/api/search")
 def search(
@@ -25,6 +28,17 @@ def search(
         description="Search operator: 'or' or 'and'",
         pattern="^(or|and)$",
     ),
+    limit: int = Query(
+        DEFAULT_LIMIT,
+        ge=1,
+        le=MAX_LIMIT,
+        description="Maximum number of results",
+    ),
+    offset: int = Query(
+        0,
+        ge=0,
+        description="Number of results to skip",
+    ),
     db: Session = Depends(get_db),
 ):
     raw_words = [w.strip() for w in words.split(",") if w.strip()]
@@ -33,13 +47,34 @@ def search(
     if not normalized_words:
         return {
             "data": [],
-            "meta": {"count": 0, "operator": operator, "words": []},
+            "meta": {
+                "count": 0,
+                "total": 0,
+                "operator": operator,
+                "words": [],
+                "limit": limit,
+                "offset": offset,
+            },
             "error": None,
         }
 
     try:
-        paragraphs = db.query(Paragraph).all()
-    except SQLAlchemyError as exc:
+        query = db.query(Paragraph)
+        for word in normalized_words:
+            like_pattern = f"%{word}%"
+            if operator == "and":
+                query = query.filter(Paragraph.content.ilike(like_pattern))
+            else:
+                break
+
+        if operator == "or":
+            from sqlalchemy import or_
+
+            conditions = [Paragraph.content.ilike(f"%{w}%") for w in normalized_words]
+            query = db.query(Paragraph).filter(or_(*conditions))
+
+        candidates = query.all()
+    except SQLAlchemyError:
         logger.exception("Database error during search")
         return JSONResponse(
             status_code=500,
@@ -55,16 +90,22 @@ def search(
 
     matching = [
         p.to_dict()
-        for p in paragraphs
+        for p in candidates
         if search_paragraphs(p.content, normalized_words, operator)
     ]
 
+    total = len(matching)
+    paginated = matching[offset : offset + limit]
+
     return {
-        "data": matching,
+        "data": paginated,
         "meta": {
-            "count": len(matching),
+            "count": len(paginated),
+            "total": total,
             "operator": operator,
             "words": normalized_words,
+            "limit": limit,
+            "offset": offset,
         },
         "error": None,
     }

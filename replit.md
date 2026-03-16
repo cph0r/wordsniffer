@@ -114,20 +114,21 @@ Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHea
 Python 3.12 FastAPI service with 3 endpoints for paragraph management:
 
 - **`GET /api/fetch`** — Fetches a 50-sentence paragraph from metaphorpsum.com, stores in PostgreSQL, returns it. Deduplicates. Returns HTTP 502 on fetch failure.
-- **`GET /api/search?words=x,y&operator=or|and`** — Searches stored paragraphs by words with OR/AND logic. Token-based matching (not substring). Case-insensitive.
-- **`GET /api/dictionary`** — Returns top 10 most frequent words (excluding stop words) with definitions from dictionaryapi.dev. Returns `"definition_not_found"` for missing words.
+- **`GET /api/paragraphs/recent?limit=20`** — Returns the most recently fetched paragraphs ordered by `fetched_at` descending. Supports `limit` param (1–100, default 20).
+- **`GET /api/search?words=x,y&operator=or|and&limit=50&offset=0`** — Searches stored paragraphs by words with OR/AND logic. SQL-level ILIKE pre-filtering + Python token-based matching (no substring false positives). Case-insensitive. Paginated with limit/offset.
+- **`GET /api/dictionary`** — Returns top 10 most frequent words (excluding stop words) with definitions from dictionaryapi.dev. Returns `"definition_not_found"` for missing words. Reads paragraphs in batches of 500.
 - **`GET /health`** — Health check.
 - All endpoints return `{data, meta, error}` JSON envelopes. Routes prefixed with `root_path="/python-api"`.
 
 Stack: FastAPI, SQLAlchemy, PostgreSQL (`DATABASE_URL`), httpx (5s timeout, shared connection pool), Pydantic. Linting: Ruff.
 
 - Entry: `main.py` — FastAPI app with lifespan (initializes DB + shared httpx client), CORS, global exception handler
-- Routes: `routes/fetch.py`, `routes/search.py`, `routes/dictionary.py` — all with SQLAlchemy error handling
+- Routes: `routes/fetch.py`, `routes/paragraphs.py`, `routes/search.py`, `routes/dictionary.py` — all with SQLAlchemy error handling
 - Services: `services/text_processing.py` (tokenize, frequency, search), `services/external_api.py` (shared HttpClient with connection pooling, defensive API response parsing)
-- Models: `models/paragraph.py` — SQLAlchemy `Paragraph` model
+- Models: `models/paragraph.py` — SQLAlchemy `Paragraph` model with descending index on `fetched_at`
 - Config: `config.py` — environment vars, stop words, 5s fetch timeout
 - DB: `db.py` — SQLAlchemy engine (dialect-aware: pool options for PostgreSQL only), session, `init_db()`
-- Tests: `tests/` — pytest + httpx.AsyncClient with in-memory SQLite (StaticPool) for unit/integration tests (52 tests incl. error handling, DB failure, malformed API response tests)
+- Tests: `tests/` — pytest + httpx.AsyncClient with in-memory SQLite (StaticPool) for unit/integration tests (57 tests incl. recent paragraphs, search pagination, error handling, DB failure, malformed API response tests)
 - Run: `cd artifacts/python-api && uvicorn main:app --host 0.0.0.0 --port 8000`
 - Lint: `cd artifacts/python-api && ruff check . && ruff format --check .`
 - Test: `cd artifacts/python-api && python3 -m pytest tests/ -v`
@@ -136,9 +137,9 @@ Stack: FastAPI, SQLAlchemy, PostgreSQL (`DATABASE_URL`), httpx (5s timeout, shar
 
 React + Vite frontend serving as an API Explorer for the Python FastAPI backend. Minimal black and white design with three tab-based panels:
 
-- **Fetch panel**: Retrieve paragraphs, displayed as stacked cards with content, ID, timestamp, and source link
-- **Search panel**: Tag-input for multiple words, AND/OR toggle, results with highlighted matching words
-- **Dictionary panel**: Ranked frequency list with animated horizontal bars, inline definitions, phonetics, part of speech
+- **Fetch panel**: Retrieve paragraphs, displayed as stacked cards with content, ID, timestamp, and source link. History persists across tab switches via React Query cache (loads from `/api/paragraphs/recent`, new fetches optimistically prepend).
+- **Search panel**: Tag-input for multiple words, AND/OR toggle, results with highlighted matching words. Highlighting uses Unicode-safe lookahead/lookbehind (no `\b`), higher contrast marks (`bg-foreground/30`). Shows paginated result counts.
+- **Dictionary panel**: Ranked frequency list with animated horizontal bars, inline definitions, phonetics, part of speech. Auto-loads on first visit with 60s staleTime cache. "Rescan" button for manual refresh.
 
 Stack: React, Vite, TailwindCSS, React Query, Framer Motion.
 
@@ -151,7 +152,7 @@ Design: Minimal monochrome — pure black background, white/gray text, no rounde
 - Responsive for desktop and mobile
 - Entry: `src/App.tsx` (includes ErrorBoundary), Pages: `src/pages/Home.tsx`
 - Panels: `src/components/FetchPanel.tsx`, `src/components/SearchPanel.tsx`, `src/components/DictionaryPanel.tsx`
-- API hooks: `src/hooks/use-api.ts` — dictionary uses `useQuery` (cached), fetch/search use `useMutation`
+- API hooks: `src/hooks/use-api.ts` — `useRecentParagraphs` (staleTime: Infinity), `useDictionary` (auto-enabled, 60s staleTime), fetch/search use `useMutation`
 - Context: `src/context/CountContext.tsx` (paragraph count state, no redundant API call)
 - Optimizations: HighlightedText memoized with React.memo, maxFrequency with useMemo, native Intl.DateTimeFormat (no date-fns), unused Shadcn UI components removed
 
