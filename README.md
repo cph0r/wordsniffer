@@ -41,7 +41,7 @@ Three commands. That's it.
 
 ```bash
 # 1. Clone and enter the project
-git clone <repo-url> && cd <repo-name>
+git clone https://github.com/cph0r/wordsniffer.git && cd wordsniffer
 
 # 2. Copy the env file (defaults work out of the box)
 cp .env.example .env
