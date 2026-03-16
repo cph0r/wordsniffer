@@ -1,0 +1,11 @@
+packages:
+  "framer-motion": "For smooth layout animations and micro-interactions"
+  "date-fns": "For formatting timestamps beautifully"
+  "clsx": "For composing utility classes"
+  "tailwind-merge": "For merging tailwind classes without conflicts"
+
+images: []
+
+notes:
+  - "The app relies on the Python FastAPI backend at /python-api/"
+  - "The total paragraph count relies on the 'meta' object returned by the API"

@@ -115,6 +115,25 @@ Stack: FastAPI, SQLAlchemy, PostgreSQL (`DATABASE_URL`), httpx (5s timeout), Pyd
 - Lint: `cd artifacts/python-api && ruff check . && ruff format --check .`
 - Test: `cd artifacts/python-api && python3 -m pytest tests/ -v`
 
+### `artifacts/frontend` (`@workspace/frontend`)
+
+React + Vite frontend serving as an API Explorer for the Python FastAPI backend. Single-page app with three panels:
+
+- **Ingestion panel**: Fetch paragraphs from the Python API, view paragraph cards with timestamps, scrollable session history
+- **Search panel**: Tag-input for multiple words, AND/OR toggle, results with highlighted matching words, result count, empty state
+- **Dictionary panel**: Get top 10 words button, word cards with frequency, phonetic, part of speech, definition. "Definition not available" for missing definitions
+
+Stack: React, Vite, TailwindCSS, React Query, Framer Motion, date-fns. Dark mode professional design.
+
+- Calls Python API at `/python-api/api/*` via Vite dev server proxy (proxies to `http://localhost:8000`)
+- Sticky header with project title and live paragraph count badge
+- Inline error banners for failed API calls, loading skeletons/spinners
+- Responsive for desktop and tablet
+- Entry: `src/App.tsx`, Pages: `src/pages/Home.tsx`
+- Panels: `src/components/FetchPanel.tsx`, `src/components/SearchPanel.tsx`, `src/components/DictionaryPanel.tsx`
+- API hooks: `src/hooks/use-api.ts` (plain fetch with React Query mutations)
+- Context: `src/context/CountContext.tsx` (paragraph count state)
+
 ### `scripts` (`@workspace/scripts`)
 
 Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
