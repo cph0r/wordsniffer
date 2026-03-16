@@ -110,7 +110,7 @@ export function SearchPanel() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={tags.length === 0 ? "Drop a scent, press Enter…" : "Add another scent…"}
+            placeholder={tags.length === 0 ? "Type a word, press Enter…" : "Add more…"}
             className="flex-1 bg-transparent border-none outline-none min-w-[120px] text-sm placeholder:text-muted-foreground"
           />
         </div>
@@ -125,7 +125,7 @@ export function SearchPanel() {
                   : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
-              ANY SCENT
+              OR
             </button>
             <button
               onClick={() => setOperator("and")}
@@ -135,7 +135,7 @@ export function SearchPanel() {
                   : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
-              ALL SCENTS
+              AND
             </button>
           </div>
 

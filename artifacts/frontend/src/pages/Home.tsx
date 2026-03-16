@@ -29,7 +29,7 @@ export default function Home() {
               </h1>
             </div>
             <span className="text-xs font-mono text-muted-foreground tabular-nums">
-              {totalParagraphs !== null ? `${totalParagraphs} bones buried` : "—"}
+              {totalParagraphs !== null ? `${totalParagraphs} records` : "—"}
             </span>
           </div>
         </div>
