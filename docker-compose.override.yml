@@ -1,6 +1,8 @@
 services:
   python-api:
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    ports:
+      - "${PORT:-8000}:8000"
     volumes:
       - ./artifacts/python-api:/app
     environment:
