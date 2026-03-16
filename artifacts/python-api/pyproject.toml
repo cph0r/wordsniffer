@@ -1,7 +1,7 @@
 [project]
-name = "python-api"
+name = "wordsniffer"
 version = "1.0.0"
-description = "Paragraph fetcher, searcher, and dictionary API"
+description = "Fetch paragraphs, search words, build a living dictionary"
 requires-python = ">=3.12"
 
 [tool.ruff]

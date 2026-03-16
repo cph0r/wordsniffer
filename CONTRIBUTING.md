@@ -1,4 +1,4 @@
-# Contributing
+# Contributing to WordSniffer
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ cp .env.example .env
 make dev
 ```
 
-The Python API will be available at `http://localhost:8000/python-api/`.
+WordSniffer will be available at `http://localhost:8000/python-api/`.
 
 ## Running Tests
 

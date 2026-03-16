@@ -3,13 +3,13 @@ services:
     image: postgres:16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-paragraphapi}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-paragraphapi}
-      POSTGRES_DB: ${POSTGRES_DB:-paragraphapi}
+      POSTGRES_USER: ${POSTGRES_USER:-wordsniffer}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wordsniffer}
+      POSTGRES_DB: ${POSTGRES_DB:-wordsniffer}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-paragraphapi}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wordsniffer}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,7 +22,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-paragraphapi}:${POSTGRES_PASSWORD:-paragraphapi}@postgres:5432/${POSTGRES_DB:-paragraphapi}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-wordsniffer}:${POSTGRES_PASSWORD:-wordsniffer}@postgres:5432/${POSTGRES_DB:-wordsniffer}
       PORT: ${PORT:-8000}
 
 volumes:

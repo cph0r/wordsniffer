@@ -20,11 +20,12 @@ export default function Home() {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="border-b border-border sticky top-0 z-50 bg-background">
         <div className="max-w-3xl mx-auto w-full px-5">
-          <div className="flex items-center justify-between h-12">
-            <h1 className="text-sm font-bold tracking-tight">
-              Paragraph API
+          <div className="flex items-center justify-between h-14">
+            <h1 className="text-2xl font-extrabold tracking-tighter select-none">
+              <span className="text-foreground">Word</span>
+              <span className="text-foreground/50">Sniffer</span>
             </h1>
-            <span className="text-xs font-mono text-muted-foreground">
+            <span className="text-xs font-mono text-muted-foreground tabular-nums">
               {totalParagraphs !== null ? `${totalParagraphs} records` : "—"}
             </span>
           </div>
@@ -64,7 +65,7 @@ export default function Home() {
       <footer className="border-t border-border">
         <div className="max-w-3xl mx-auto w-full px-5 py-3">
           <p className="text-xs text-muted-foreground">
-            FastAPI + React + PostgreSQL
+            WordSniffer — FastAPI + React + PostgreSQL
           </p>
         </div>
       </footer>
