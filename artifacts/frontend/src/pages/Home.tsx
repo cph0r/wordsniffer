@@ -68,7 +68,7 @@ export default function Home() {
       <footer className="border-t border-border">
         <div className="max-w-3xl mx-auto w-full px-5 py-3">
           <p className="text-xs text-muted-foreground">
-            WordSniffer — good boy finds all the words
+            made with ❤️ for Portcast
           </p>
         </div>
       </footer>
