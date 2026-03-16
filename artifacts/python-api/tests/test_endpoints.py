@@ -210,11 +210,18 @@ class TestSearchEndpoint:
         body = response.json()
         assert body["meta"]["count"] == 3
         assert body["meta"]["total"] == 10
+        assert body["meta"]["has_more"] is True
 
         response2 = await client.get("/api/search?words=python&limit=3&offset=3")
         body2 = response2.json()
         assert body2["meta"]["count"] == 3
         assert body2["meta"]["offset"] == 3
+        assert body2["meta"]["has_more"] is True
+
+        response3 = await client.get("/api/search?words=python&limit=3&offset=9")
+        body3 = response3.json()
+        assert body3["meta"]["count"] == 1
+        assert body3["meta"]["has_more"] is False
 
     @pytest.mark.asyncio
     async def test_search_meta_includes_pagination_fields(self, client, db_session):
@@ -224,6 +231,21 @@ class TestSearchEndpoint:
         assert "total" in body["meta"]
         assert "limit" in body["meta"]
         assert "offset" in body["meta"]
+        assert "has_more" in body["meta"]
+
+    @pytest.mark.asyncio
+    async def test_search_has_more_false_when_all_fit(self, client, db_session):
+        self._seed_paragraphs(db_session)
+        response = await client.get("/api/search?words=python&limit=100")
+        body = response.json()
+        assert body["meta"]["has_more"] is False
+        assert body["meta"]["count"] == body["meta"]["total"]
+
+    @pytest.mark.asyncio
+    async def test_search_empty_words_has_more_false(self, client, db_session):
+        response = await client.get("/api/search?words=")
+        body = response.json()
+        assert body["meta"]["has_more"] is False
 
 
 class TestDictionaryEndpoint:

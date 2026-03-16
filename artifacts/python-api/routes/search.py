@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-DEFAULT_LIMIT = 200
-MAX_LIMIT = 1000
+DEFAULT_LIMIT = 10
+MAX_LIMIT = 200
 
 
 @router.get("/api/search")
@@ -54,6 +54,7 @@ def search(
                 "words": [],
                 "limit": limit,
                 "offset": offset,
+                "has_more": False,
             },
             "error": None,
         }
@@ -63,14 +64,19 @@ def search(
         for word in normalized_words:
             like_pattern = f"%{word}%"
             if operator == "and":
-                query = query.filter(Paragraph.content.ilike(like_pattern))
+                query = query.filter(
+                    Paragraph.content.ilike(like_pattern)
+                )
             else:
                 break
 
         if operator == "or":
             from sqlalchemy import or_
 
-            conditions = [Paragraph.content.ilike(f"%{w}%") for w in normalized_words]
+            conditions = [
+                Paragraph.content.ilike(f"%{w}%")
+                for w in normalized_words
+            ]
             query = db.query(Paragraph).filter(or_(*conditions))
 
         candidates = query.all()
@@ -106,6 +112,7 @@ def search(
             "words": normalized_words,
             "limit": limit,
             "offset": offset,
+            "has_more": (offset + len(paginated)) < total,
         },
         "error": None,
     }

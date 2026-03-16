@@ -97,17 +97,39 @@ export function useFetchParagraph() {
   });
 }
 
-export function useSearchParagraphs() {
-  return useMutation({
-    mutationFn: ({ words, operator }: { words: string[]; operator: "or" | "and" }) => {
-      const params = new URLSearchParams({
-        words: words.join(","),
-        operator
-      });
-      return fetcher<APIResponse<Paragraph[], { count: number; total: number; operator: string; words: string[]; limit: number; offset: number }>>(
-        `${API_BASE}/search?${params.toString()}`
-      );
-    }
+const SEARCH_PAGE_SIZE = 10;
+
+type SearchMeta = {
+  count: number;
+  total: number;
+  operator: string;
+  words: string[];
+  limit: number;
+  offset: number;
+  has_more: boolean;
+};
+type SearchResponse = APIResponse<Paragraph[], SearchMeta>;
+
+export function useSearchParagraphs(words: string[], operator: "or" | "and") {
+  const enabled = words.length > 0;
+  const params = new URLSearchParams({
+    words: words.join(","),
+    operator,
+  });
+
+  return useInfiniteQuery<SearchResponse>({
+    queryKey: ["search", words.join(","), operator],
+    queryFn: ({ pageParam = 0 }) =>
+      fetcher<SearchResponse>(
+        `${API_BASE}/search?${params.toString()}&limit=${SEARCH_PAGE_SIZE}&offset=${pageParam}`
+      ),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.has_more
+        ? lastPage.meta.offset + lastPage.meta.limit
+        : undefined,
+    enabled,
+    staleTime: 30_000,
   });
 }
 

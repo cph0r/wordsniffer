@@ -1,7 +1,7 @@
-import { useState, memo } from "react";
+import { useState, useMemo, memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useSearchParagraphs, type Paragraph } from "@/hooks/use-api";
-import { X, AlertCircle } from "lucide-react";
+import { X, AlertCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const HighlightedText = memo(function HighlightedText({ text, words }: { text: string; words: string[] }) {
@@ -29,8 +29,30 @@ const HighlightedText = memo(function HighlightedText({ text, words }: { text: s
 export function SearchPanel() {
   const [input, setInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [submittedTags, setSubmittedTags] = useState<string[]>([]);
   const [operator, setOperator] = useState<"or" | "and">("or");
-  const { mutate, data, isPending, error } = useSearchParagraphs();
+  const [submittedOperator, setSubmittedOperator] = useState<"or" | "and">("or");
+
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    error,
+  } = useSearchParagraphs(submittedTags, submittedOperator);
+
+  const allResults = useMemo(
+    () => data?.pages.flatMap(p => p.data) ?? [],
+    [data]
+  );
+
+  const meta = data?.pages[0]?.meta;
+
+  const totalMatches = useMemo(() => {
+    if (!data?.pages.length) return 0;
+    return data.pages[0].meta.total;
+  }, [data]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === ',') {
@@ -50,10 +72,13 @@ export function SearchPanel() {
     setTags(tags.filter(t => t !== tagToRemove));
   };
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     if (tags.length === 0) return;
-    mutate({ words: tags, operator });
-  };
+    setSubmittedTags([...tags]);
+    setSubmittedOperator(operator);
+  }, [tags, operator]);
+
+  const hasSearched = submittedTags.length > 0;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -114,7 +139,7 @@ export function SearchPanel() {
             </button>
           </div>
 
-          <Button onClick={handleSearch} disabled={tags.length === 0} isLoading={isPending}>
+          <Button onClick={handleSearch} disabled={tags.length === 0} isLoading={isLoading && !isFetchingNextPage}>
             Search
           </Button>
         </div>
@@ -127,32 +152,32 @@ export function SearchPanel() {
         </div>
       )}
 
-      {data && (
+      {hasSearched && !isLoading && (
         <div className="space-y-4">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">Results</span>
             <span className="text-muted-foreground font-mono text-xs">
-              {data.meta.count} of {data.meta.total} found
+              {allResults.length} of {totalMatches} shown
             </span>
           </div>
 
-          {data.data.length === 0 ? (
+          {allResults.length === 0 ? (
             <div className="py-12 text-center">
               <p className="text-sm text-muted-foreground">No matches found.</p>
             </div>
           ) : (
             <div className="space-y-3">
               <AnimatePresence>
-                {data.data.map((p: Paragraph, i: number) => (
+                {allResults.map((p: Paragraph, i: number) => (
                   <motion.article
                     key={p.id}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
+                    transition={{ delay: Math.min(i, 10) * 0.03 }}
                     className="border border-border p-4"
                   >
                     <p className="text-sm leading-relaxed text-foreground/85">
-                      <HighlightedText text={p.content} words={data.meta.words} />
+                      <HighlightedText text={p.content} words={meta?.words ?? []} />
                     </p>
                     <div className="mt-2 text-xs text-muted-foreground font-mono">
                       #{p.id}
@@ -160,8 +185,33 @@ export function SearchPanel() {
                   </motion.article>
                 ))}
               </AnimatePresence>
+
+              {hasNextPage && (
+                <div className="flex justify-center pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => fetchNextPage()}
+                    disabled={isFetchingNextPage}
+                  >
+                    {isFetchingNextPage ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                        Loading…
+                      </>
+                    ) : (
+                      "Load more"
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
+        </div>
+      )}
+
+      {isLoading && !isFetchingNextPage && hasSearched && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
       )}
     </div>
