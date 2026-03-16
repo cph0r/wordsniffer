@@ -59,6 +59,51 @@ class TestFetchEndpoint:
         assert body["error"]["type"] == "empty_response"
 
 
+class TestRecentParagraphsEndpoint:
+    def _seed_paragraphs(self, db_session):
+        from datetime import datetime, timedelta, timezone
+
+        base = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        paragraphs = [
+            Paragraph(
+                content=f"Paragraph number {i}",
+                source_url="http://test.com",
+                fetched_at=base + timedelta(hours=i),
+            )
+            for i in range(5)
+        ]
+        for p in paragraphs:
+            db_session.add(p)
+        db_session.commit()
+
+    @pytest.mark.asyncio
+    async def test_recent_returns_ordered(self, client, db_session):
+        self._seed_paragraphs(db_session)
+        response = await client.get("/api/paragraphs/recent")
+        body = response.json()
+        assert body["error"] is None
+        assert body["meta"]["count"] == 5
+        assert body["meta"]["total_paragraphs"] == 5
+        assert body["data"][0]["content"] == "Paragraph number 4"
+        assert body["data"][-1]["content"] == "Paragraph number 0"
+
+    @pytest.mark.asyncio
+    async def test_recent_respects_limit(self, client, db_session):
+        self._seed_paragraphs(db_session)
+        response = await client.get("/api/paragraphs/recent?limit=2")
+        body = response.json()
+        assert body["meta"]["count"] == 2
+        assert len(body["data"]) == 2
+
+    @pytest.mark.asyncio
+    async def test_recent_empty_db(self, client, db_session):
+        response = await client.get("/api/paragraphs/recent")
+        body = response.json()
+        assert body["error"] is None
+        assert body["data"] == []
+        assert body["meta"]["count"] == 0
+
+
 class TestSearchEndpoint:
     def _seed_paragraphs(self, db_session):
         paragraphs = [
@@ -150,6 +195,35 @@ class TestSearchEndpoint:
         response = await client.get("/api/search?words=java&operator=or")
         body = response.json()
         assert body["meta"]["count"] == 0
+
+    @pytest.mark.asyncio
+    async def test_search_pagination(self, client, db_session):
+        for i in range(10):
+            db_session.add(
+                Paragraph(
+                    content=f"Python example number {i}",
+                    source_url="http://test.com",
+                )
+            )
+        db_session.commit()
+        response = await client.get("/api/search?words=python&limit=3&offset=0")
+        body = response.json()
+        assert body["meta"]["count"] == 3
+        assert body["meta"]["total"] == 10
+
+        response2 = await client.get("/api/search?words=python&limit=3&offset=3")
+        body2 = response2.json()
+        assert body2["meta"]["count"] == 3
+        assert body2["meta"]["offset"] == 3
+
+    @pytest.mark.asyncio
+    async def test_search_meta_includes_pagination_fields(self, client, db_session):
+        self._seed_paragraphs(db_session)
+        response = await client.get("/api/search?words=python")
+        body = response.json()
+        assert "total" in body["meta"]
+        assert "limit" in body["meta"]
+        assert "offset" in body["meta"]
 
 
 class TestDictionaryEndpoint:
@@ -311,10 +385,9 @@ class TestDatabaseErrorHandling:
 class TestExternalApiParsing:
     @pytest.mark.asyncio
     async def test_fetch_definition_malformed_json(self):
-        import httpx
         from unittest.mock import AsyncMock as AM
 
-        from services.external_api import http_client, fetch_definition
+        from services.external_api import fetch_definition, http_client
 
         original = http_client._client
         mock_client = AM()
@@ -335,7 +408,7 @@ class TestExternalApiParsing:
     async def test_fetch_definition_non_json_content_type(self):
         from unittest.mock import AsyncMock as AM
 
-        from services.external_api import http_client, fetch_definition
+        from services.external_api import fetch_definition, http_client
 
         original = http_client._client
         mock_client = AM()
@@ -354,7 +427,7 @@ class TestExternalApiParsing:
     async def test_fetch_definition_empty_list(self):
         from unittest.mock import AsyncMock as AM
 
-        from services.external_api import http_client, fetch_definition
+        from services.external_api import fetch_definition, http_client
 
         original = http_client._client
         mock_client = AM()

@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useFetchParagraph, type Paragraph } from "@/hooks/use-api";
+import { useFetchParagraph, useRecentParagraphs, type Paragraph } from "@/hooks/use-api";
 import { useParagraphCount } from "@/context/CountContext";
 import { AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,16 +14,12 @@ const timeFormatter = new Intl.DateTimeFormat(undefined, {
 export function FetchPanel() {
   const { mutate, isPending, error } = useFetchParagraph();
   const { totalParagraphs } = useParagraphCount();
-  const [history, setHistory] = useState<Paragraph[]>([]);
+  const { data: recentData, isLoading: isLoadingRecent } = useRecentParagraphs();
+
+  const history: Paragraph[] = recentData?.data ?? [];
 
   const handleFetch = () => {
-    mutate(undefined, {
-      onSuccess: (res) => {
-        if (res.data) {
-          setHistory((prev) => [res.data, ...prev]);
-        }
-      }
-    });
+    mutate(undefined);
   };
 
   return (
@@ -45,6 +40,21 @@ export function FetchPanel() {
         <div className="border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm flex items-start gap-2.5">
           <AlertCircle className="w-4 h-4 mt-0.5 text-destructive shrink-0" />
           <span className="text-destructive">{error.message}</span>
+        </div>
+      )}
+
+      {isLoadingRecent && history.length === 0 && (
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="border border-border p-4 space-y-3 animate-pulse">
+              <div className="h-4 bg-muted w-full" />
+              <div className="h-4 bg-muted w-3/4" />
+              <div className="flex justify-between">
+                <div className="h-3 bg-muted w-20" />
+                <div className="h-3 bg-muted w-12" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -75,7 +85,7 @@ export function FetchPanel() {
         ))}
       </AnimatePresence>
 
-      {history.length === 0 && !isPending && !error && (
+      {history.length === 0 && !isPending && !error && !isLoadingRecent && (
         <div className="py-16 text-center">
           <p className="text-sm text-muted-foreground">
             No paragraphs fetched yet.

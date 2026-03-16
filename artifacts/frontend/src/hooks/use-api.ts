@@ -39,6 +39,26 @@ async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
   return data;
 }
 
+type RecentMeta = { count: number; total_paragraphs: number };
+type RecentResponse = APIResponse<Paragraph[], RecentMeta>;
+
+export function useRecentParagraphs() {
+  const { setTotalParagraphs } = useParagraphCount();
+
+  const query = useQuery<RecentResponse>({
+    queryKey: ["recent-paragraphs"],
+    queryFn: () => fetcher<RecentResponse>(`${API_BASE}/paragraphs/recent?limit=20`),
+    staleTime: Infinity,
+  });
+
+  if (query.data?.meta?.total_paragraphs !== undefined) {
+    const count = query.data.meta.total_paragraphs;
+    queueMicrotask(() => setTotalParagraphs(count));
+  }
+
+  return query;
+}
+
 export function useFetchParagraph() {
   const { setTotalParagraphs } = useParagraphCount();
   const queryClient = useQueryClient();
@@ -52,6 +72,22 @@ export function useFetchParagraph() {
       if (res.meta?.total_paragraphs !== undefined) {
         setTotalParagraphs(res.meta.total_paragraphs);
       }
+      if (!res.meta?.duplicate) {
+        queryClient.setQueryData<RecentResponse>(["recent-paragraphs"], (old) => {
+          if (!old || !res.data) return old;
+          const exists = old.data.some((p) => p.id === res.data.id);
+          if (exists) return old;
+          return {
+            ...old,
+            data: [res.data, ...old.data].slice(0, 20),
+            meta: {
+              ...old.meta,
+              count: Math.min((old.meta.count || 0) + 1, 20),
+              total_paragraphs: res.meta.total_paragraphs ?? old.meta.total_paragraphs,
+            },
+          };
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["dictionary"] });
     }
   });
@@ -64,7 +100,7 @@ export function useSearchParagraphs() {
         words: words.join(","),
         operator
       });
-      return fetcher<APIResponse<Paragraph[], { count: number; operator: string; words: string[] }>>(
+      return fetcher<APIResponse<Paragraph[], { count: number; total: number; operator: string; words: string[]; limit: number; offset: number }>>(
         `${API_BASE}/search?${params.toString()}`
       );
     }
@@ -79,7 +115,8 @@ export function useDictionary() {
   const query = useQuery<DictionaryResponse>({
     queryKey: ["dictionary"],
     queryFn: () => fetcher<DictionaryResponse>(`${API_BASE}/dictionary`),
-    enabled: false,
+    enabled: true,
+    staleTime: 60_000,
   });
 
   if (query.data?.meta?.total_paragraphs !== undefined) {

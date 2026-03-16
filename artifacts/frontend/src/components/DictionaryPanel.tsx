@@ -21,7 +21,7 @@ export function DictionaryPanel() {
           </p>
         </div>
         <Button onClick={() => refetch()} isLoading={isFetching}>
-          {isFetching ? "Analyzing…" : "Analyze"}
+          {isFetching ? "Scanning…" : "Rescan"}
         </Button>
       </div>
 
@@ -109,7 +109,7 @@ export function DictionaryPanel() {
       {!data && !error && !isFetching && (
         <div className="py-16 text-center">
           <p className="text-sm text-muted-foreground">
-            Click analyze to see word frequencies.
+            Loading word frequencies…
           </p>
         </div>
       )}

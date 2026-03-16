@@ -8,14 +8,14 @@ const HighlightedText = memo(function HighlightedText({ text, words }: { text: s
   if (!words.length) return <>{text}</>;
 
   const escapedWords = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const regex = new RegExp(`\\b(${escapedWords.join('|')})\\b`, 'gi');
+  const regex = new RegExp(`(?<![\\p{L}\\p{N}_])(${escapedWords.join('|')})(?![\\p{L}\\p{N}_])`, 'giu');
   const parts = text.split(regex);
 
   return (
     <>
       {parts.map((part, i) =>
         words.some(w => w.toLowerCase() === part.toLowerCase()) ? (
-          <mark key={i} className="bg-foreground/15 text-foreground px-0.5 font-semibold">
+          <mark key={i} className="bg-foreground/30 text-foreground px-0.5 font-semibold">
             {part}
           </mark>
         ) : (
@@ -131,7 +131,9 @@ export function SearchPanel() {
         <div className="space-y-4">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">Results</span>
-            <span className="text-muted-foreground font-mono text-xs">{data.meta.count} found</span>
+            <span className="text-muted-foreground font-mono text-xs">
+              {data.meta.count} of {data.meta.total} found
+            </span>
           </div>
 
           {data.data.length === 0 ? (

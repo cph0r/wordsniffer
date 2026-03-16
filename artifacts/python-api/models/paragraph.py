@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Integer, Text, func
+from sqlalchemy import Column, DateTime, Index, Integer, Text, func
 from sqlalchemy.orm import DeclarativeBase
 
 
@@ -20,6 +20,10 @@ class Paragraph(Base):
         default=lambda: datetime.now(timezone.utc),
     )
     source_url = Column(Text, nullable=False)
+
+    __table_args__ = (
+        Index("ix_paragraphs_fetched_at", fetched_at.desc()),
+    )
 
     def to_dict(self) -> dict:
         return {
