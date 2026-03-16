@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "API Explorer"
+version = "1.0.0"
+id = "artifacts/frontend"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 18130
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/frontend run dev"
+
+[services.env]
+PORT = "18130"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/frontend", "run", "build"]
+publicDir = "artifacts/frontend/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
