@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { useParagraphCount } from "@/context/CountContext";
 
-const API_BASE = "/python-api/api";
+const API_BASE = import.meta.env.PROD ? "/api" : "/python-api/api";
 
 const PAGE_SIZE = 5;
 

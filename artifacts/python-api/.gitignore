@@ -10,3 +10,4 @@ build/
 *.egg
 .ruff_cache/
 test.db
+static/

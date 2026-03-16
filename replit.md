@@ -52,6 +52,7 @@ artifacts-monorepo/
 - **CI** (`.github/workflows/ci.yml`): lint, test (with postgres service), docker build, TypeScript typecheck — all parallel
 - **CD** (`.github/workflows/cd.yml`): builds & pushes to GHCR on push to main (latest + SHA tags)
 - **Pre-commit**: `.pre-commit-config.yaml` with ruff, trailing-whitespace, end-of-file-fixer, check-yaml, check-json
+- **Replit Deployment**: Autoscale target. Build step builds frontend (Vite, `BASE_PATH=/`) and copies output to `artifacts/python-api/static/`. Run step starts uvicorn. In production, FastAPI serves both API routes (`/api/*`) and the SPA (all other paths → `index.html`) from a single process. `REPLIT_DEPLOYMENT=1` env var toggles production mode (`root_path=""`, static file serving enabled).
 
 ## TypeScript & Composite Projects
 
@@ -118,7 +119,7 @@ Python 3.12 FastAPI service with 3 endpoints for paragraph management:
 - **`GET /api/search?words=x,y&operator=or|and&limit=50&offset=0`** — Searches stored paragraphs by words with OR/AND logic. SQL-level ILIKE pre-filtering + Python token-based matching (no substring false positives). Case-insensitive. Paginated with limit/offset.
 - **`GET /api/dictionary`** — Returns top 10 most frequent words (excluding stop words) with definitions from dictionaryapi.dev. Returns `"definition_not_found"` for missing words. Reads paragraphs in batches of 500.
 - **`GET /health`** — Health check.
-- All endpoints return `{data, meta, error}` JSON envelopes. Routes prefixed with `root_path="/python-api"`.
+- All endpoints return `{data, meta, error}` JSON envelopes. Routes prefixed with `root_path="/python-api"` in dev, empty in production.
 
 Stack: FastAPI, SQLAlchemy, PostgreSQL (`DATABASE_URL`), httpx (5s timeout, shared connection pool), Pydantic. Linting: Ruff.
 
@@ -145,7 +146,7 @@ Stack: React, Vite, TailwindCSS, React Query, Framer Motion.
 
 Design: Minimal monochrome — pure black background, white/gray text, no rounded corners, Inter + JetBrains Mono fonts. Clean information-dense layout.
 
-- Calls Python API at `/python-api/api/*` via Vite dev server proxy (proxies to `http://localhost:8000`)
+- Calls Python API at `/python-api/api/*` in dev (via Vite proxy to `http://localhost:8000`) or `/api/*` in production (same origin, served by FastAPI)
 - Compact header with title and record count
 - Inline error banners for failed API calls
 - React Error Boundary wraps app for crash recovery
