@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="artifacts/frontend/public/logo.png" alt="WordSniffer Logo" width="120" />
+</p>
+
 # WordSniffer
 
 **Fetch. Sniff. Kennel. Good boy.**
