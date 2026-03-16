@@ -36,7 +36,7 @@ export default function Home() {
       </header>
 
       <div className="max-w-3xl mx-auto w-full px-5 mt-6">
-        <nav className="flex gap-0 border-b border-border">
+        <nav className="flex justify-center gap-0 border-b border-border">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -67,7 +67,7 @@ export default function Home() {
 
       <footer className="border-t border-border">
         <div className="max-w-3xl mx-auto w-full px-5 py-3">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground text-center">
             made with ❤️ for Portcast
           </p>
         </div>
