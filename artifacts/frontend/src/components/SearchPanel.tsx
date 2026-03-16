@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { useSearchParagraphs, type Paragraph } from "@/hooks/use-api";
 import { X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-function HighlightedText({ text, words }: { text: string; words: string[] }) {
+const HighlightedText = memo(function HighlightedText({ text, words }: { text: string; words: string[] }) {
   if (!words.length) return <>{text}</>;
 
   const escapedWords = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
@@ -24,7 +24,7 @@ function HighlightedText({ text, words }: { text: string; words: string[] }) {
       )}
     </>
   );
-}
+});
 
 export function SearchPanel() {
   const [input, setInput] = useState("");

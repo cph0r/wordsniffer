@@ -1,11 +1,15 @@
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useDictionary, type WordDefinition } from "@/hooks/use-api";
 import { AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function DictionaryPanel() {
-  const { mutate, data, isPending, error } = useDictionary();
-  const maxFrequency = data?.data?.reduce((max, w) => Math.max(max, w.frequency), 0) || 1;
+  const { data, isFetching, error, refetch } = useDictionary();
+  const maxFrequency = useMemo(
+    () => data?.data?.reduce((max, w) => Math.max(max, w.frequency), 0) || 1,
+    [data?.data]
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -16,8 +20,8 @@ export function DictionaryPanel() {
             Top 10 most frequent words with definitions.
           </p>
         </div>
-        <Button onClick={() => mutate()} isLoading={isPending}>
-          {isPending ? "Analyzing…" : "Analyze"}
+        <Button onClick={() => refetch()} isLoading={isFetching}>
+          {isFetching ? "Analyzing…" : "Analyze"}
         </Button>
       </div>
 
@@ -28,7 +32,7 @@ export function DictionaryPanel() {
         </div>
       )}
 
-      {isPending && !data && (
+      {isFetching && !data && (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 animate-pulse">
@@ -102,7 +106,7 @@ export function DictionaryPanel() {
         </div>
       )}
 
-      {!data && !error && !isPending && (
+      {!data && !error && !isFetching && (
         <div className="py-16 text-center">
           <p className="text-sm text-muted-foreground">
             Click analyze to see word frequencies.

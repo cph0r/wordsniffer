@@ -46,6 +46,7 @@ class TestFetchEndpoint:
         assert body["error"] is not None
         assert body["error"]["type"] == "external_api_error"
         assert body["data"] is None
+        assert "Connection failed" not in body["error"]["message"]
 
     @patch("routes.fetch.fetch_paragraph", new_callable=AsyncMock)
     @pytest.mark.asyncio
@@ -234,3 +235,137 @@ class TestHealthEndpoint:
         response = await client.get("/health")
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
+
+
+class TestGlobalErrorHandler:
+    @patch("routes.fetch.fetch_paragraph", new_callable=AsyncMock)
+    @pytest.mark.asyncio
+    async def test_unhandled_exception_returns_structured_500(
+        self, mock_fetch, client
+    ):
+        mock_fetch.side_effect = RuntimeError("Something unexpected")
+        response = await client.get("/api/fetch")
+        assert response.status_code == 500
+        body = response.json()
+        assert body["error"]["type"] == "internal_error"
+        assert body["data"] is None
+        assert body["meta"] is None
+
+    @pytest.mark.asyncio
+    async def test_health_still_works_after_error(self, client):
+        response = await client.get("/health")
+        assert response.status_code == 200
+
+
+class TestDatabaseErrorHandling:
+    @pytest.mark.asyncio
+    async def test_search_db_error(self, client, db_session):
+        from unittest.mock import MagicMock
+
+        from sqlalchemy.exc import OperationalError
+
+        mock_session = MagicMock()
+        mock_session.query.side_effect = OperationalError(
+            "connection refused", {}, None
+        )
+
+        def override():
+            yield mock_session
+
+        from db import get_db as real_get_db
+        from main import app
+
+        app.dependency_overrides[real_get_db] = override
+        response = await client.get("/api/search?words=test")
+        body = response.json()
+        assert response.status_code == 500
+        assert body["error"]["type"] == "database_error"
+        app.dependency_overrides.clear()
+
+    @patch("routes.dictionary.fetch_definitions_batch", new_callable=AsyncMock)
+    @pytest.mark.asyncio
+    async def test_dictionary_db_error(self, mock_defs, client, db_session):
+        from unittest.mock import MagicMock
+
+        from sqlalchemy.exc import OperationalError
+
+        mock_session = MagicMock()
+        mock_session.query.side_effect = OperationalError(
+            "connection refused", {}, None
+        )
+
+        def override():
+            yield mock_session
+
+        from db import get_db as real_get_db
+        from main import app
+
+        app.dependency_overrides[real_get_db] = override
+        response = await client.get("/api/dictionary")
+        body = response.json()
+        assert response.status_code == 500
+        assert body["error"]["type"] == "database_error"
+        app.dependency_overrides.clear()
+
+
+class TestExternalApiParsing:
+    @pytest.mark.asyncio
+    async def test_fetch_definition_malformed_json(self):
+        import httpx
+        from unittest.mock import AsyncMock as AM
+
+        from services.external_api import http_client, fetch_definition
+
+        original = http_client._client
+        mock_client = AM()
+        mock_response = AM()
+        mock_response.status_code = 200
+        mock_response.headers = {"content-type": "application/json"}
+        mock_response.json.side_effect = ValueError("bad json")
+        mock_response.raise_for_status = AM()
+        mock_client.get = AM(return_value=mock_response)
+        http_client._client = mock_client
+
+        result = await fetch_definition("test")
+        assert result["found"] is False
+        assert result["word"] == "test"
+        http_client._client = original
+
+    @pytest.mark.asyncio
+    async def test_fetch_definition_non_json_content_type(self):
+        from unittest.mock import AsyncMock as AM
+
+        from services.external_api import http_client, fetch_definition
+
+        original = http_client._client
+        mock_client = AM()
+        mock_response = AM()
+        mock_response.status_code = 200
+        mock_response.headers = {"content-type": "text/html"}
+        mock_response.raise_for_status = AM()
+        mock_client.get = AM(return_value=mock_response)
+        http_client._client = mock_client
+
+        result = await fetch_definition("test")
+        assert result["found"] is False
+        http_client._client = original
+
+    @pytest.mark.asyncio
+    async def test_fetch_definition_empty_list(self):
+        from unittest.mock import AsyncMock as AM
+
+        from services.external_api import http_client, fetch_definition
+
+        original = http_client._client
+        mock_client = AM()
+        mock_response = AM()
+        mock_response.status_code = 200
+        mock_response.headers = {"content-type": "application/json"}
+        mock_response.json.return_value = []
+        mock_response.raise_for_status = AM()
+        mock_client.get = AM(return_value=mock_response)
+        http_client._client = mock_client
+
+        result = await fetch_definition("test")
+        assert result["found"] is False
+        http_client._client = original

@@ -1,9 +1,7 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParagraphCount } from "@/context/CountContext";
 
 const API_BASE = "/python-api/api";
-
-// --- Types ---
 
 export interface APIError {
   message: string;
@@ -32,8 +30,6 @@ export interface WordDefinition {
   found: boolean;
 }
 
-// --- Helper ---
-
 async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
   const data = await res.json();
@@ -43,20 +39,20 @@ async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
   return data;
 }
 
-// --- Hooks ---
-
 export function useFetchParagraph() {
   const { setTotalParagraphs } = useParagraphCount();
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => 
+    mutationFn: () =>
       fetcher<APIResponse<Paragraph, { duplicate: boolean; total_paragraphs: number }>>(
-        `${API_BASE}/fetch`, { method: "GET" } // API requires GET for fetch endpoint
+        `${API_BASE}/fetch`, { method: "GET" }
       ),
     onSuccess: (res) => {
       if (res.meta?.total_paragraphs !== undefined) {
         setTotalParagraphs(res.meta.total_paragraphs);
       }
+      queryClient.invalidateQueries({ queryKey: ["dictionary"] });
     }
   });
 }
@@ -75,18 +71,23 @@ export function useSearchParagraphs() {
   });
 }
 
+type DictionaryResponse = APIResponse<WordDefinition[], { total_paragraphs: number; total_words: number }>;
+
 export function useDictionary() {
   const { setTotalParagraphs } = useParagraphCount();
 
-  return useMutation({
-    mutationFn: () => 
-      fetcher<APIResponse<WordDefinition[], { total_paragraphs: number; total_words: number }>>(
-        `${API_BASE}/dictionary`
-      ),
-    onSuccess: (res) => {
-      if (res.meta?.total_paragraphs !== undefined) {
-        setTotalParagraphs(res.meta.total_paragraphs);
-      }
-    }
+  const query = useQuery<DictionaryResponse>({
+    queryKey: ["dictionary"],
+    queryFn: () => fetcher<DictionaryResponse>(`${API_BASE}/dictionary`),
+    enabled: false,
   });
+
+  if (query.data?.meta?.total_paragraphs !== undefined) {
+    const count = query.data.meta.total_paragraphs;
+    if (count !== undefined) {
+      queueMicrotask(() => setTotalParagraphs(count));
+    }
+  }
+
+  return query;
 }

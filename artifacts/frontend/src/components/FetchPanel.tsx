@@ -2,9 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useFetchParagraph, type Paragraph } from "@/hooks/use-api";
 import { useParagraphCount } from "@/context/CountContext";
-import { format } from "date-fns";
 import { AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const timeFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
 
 export function FetchPanel() {
   const { mutate, isPending, error } = useFetchParagraph();
@@ -55,7 +61,7 @@ export function FetchPanel() {
               {p.content}
             </p>
             <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
-              <span>#{p.id} · {format(new Date(p.fetched_at), "HH:mm:ss")}</span>
+              <span>#{p.id} · {timeFormatter.format(new Date(p.fetched_at))}</span>
               <a
                 href={p.source_url}
                 target="_blank"

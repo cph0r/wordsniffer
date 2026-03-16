@@ -119,15 +119,15 @@ Python 3.12 FastAPI service with 3 endpoints for paragraph management:
 - **`GET /health`** — Health check.
 - All endpoints return `{data, meta, error}` JSON envelopes. Routes prefixed with `root_path="/python-api"`.
 
-Stack: FastAPI, SQLAlchemy, PostgreSQL (`DATABASE_URL`), httpx (5s timeout), Pydantic. Linting: Ruff.
+Stack: FastAPI, SQLAlchemy, PostgreSQL (`DATABASE_URL`), httpx (5s timeout, shared connection pool), Pydantic. Linting: Ruff.
 
-- Entry: `main.py` — FastAPI app with lifespan, CORS, routes
-- Routes: `routes/fetch.py`, `routes/search.py`, `routes/dictionary.py`
-- Services: `services/text_processing.py` (tokenize, frequency, search), `services/external_api.py` (metaphorpsum, dictionaryapi)
+- Entry: `main.py` — FastAPI app with lifespan (initializes DB + shared httpx client), CORS, global exception handler
+- Routes: `routes/fetch.py`, `routes/search.py`, `routes/dictionary.py` — all with SQLAlchemy error handling
+- Services: `services/text_processing.py` (tokenize, frequency, search), `services/external_api.py` (shared HttpClient with connection pooling, defensive API response parsing)
 - Models: `models/paragraph.py` — SQLAlchemy `Paragraph` model
 - Config: `config.py` — environment vars, stop words, 5s fetch timeout
 - DB: `db.py` — SQLAlchemy engine (dialect-aware: pool options for PostgreSQL only), session, `init_db()`
-- Tests: `tests/` — pytest + httpx.AsyncClient with in-memory SQLite (StaticPool) for unit/integration tests (45 tests)
+- Tests: `tests/` — pytest + httpx.AsyncClient with in-memory SQLite (StaticPool) for unit/integration tests (52 tests incl. error handling, DB failure, malformed API response tests)
 - Run: `cd artifacts/python-api && uvicorn main:app --host 0.0.0.0 --port 8000`
 - Lint: `cd artifacts/python-api && ruff check . && ruff format --check .`
 - Test: `cd artifacts/python-api && python3 -m pytest tests/ -v`
@@ -140,18 +140,20 @@ React + Vite frontend serving as an API Explorer for the Python FastAPI backend.
 - **Search panel**: Tag-input for multiple words, AND/OR toggle, results with highlighted matching words
 - **Dictionary panel**: Ranked frequency list with animated horizontal bars, inline definitions, phonetics, part of speech
 
-Stack: React, Vite, TailwindCSS, React Query, Framer Motion, date-fns.
+Stack: React, Vite, TailwindCSS, React Query, Framer Motion.
 
 Design: Minimal monochrome — pure black background, white/gray text, no rounded corners, Inter + JetBrains Mono fonts. Clean information-dense layout.
 
 - Calls Python API at `/python-api/api/*` via Vite dev server proxy (proxies to `http://localhost:8000`)
 - Compact header with title and record count
 - Inline error banners for failed API calls
+- React Error Boundary wraps app for crash recovery
 - Responsive for desktop and mobile
-- Entry: `src/App.tsx`, Pages: `src/pages/Home.tsx`
+- Entry: `src/App.tsx` (includes ErrorBoundary), Pages: `src/pages/Home.tsx`
 - Panels: `src/components/FetchPanel.tsx`, `src/components/SearchPanel.tsx`, `src/components/DictionaryPanel.tsx`
-- API hooks: `src/hooks/use-api.ts` (plain fetch with React Query mutations)
-- Context: `src/context/CountContext.tsx` (paragraph count state)
+- API hooks: `src/hooks/use-api.ts` — dictionary uses `useQuery` (cached), fetch/search use `useMutation`
+- Context: `src/context/CountContext.tsx` (paragraph count state, no redundant API call)
+- Optimizations: HighlightedText memoized with React.memo, maxFrequency with useMemo, native Intl.DateTimeFormat (no date-fns), unused Shadcn UI components removed
 
 ### `scripts` (`@workspace/scripts`)
 

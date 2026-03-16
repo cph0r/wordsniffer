@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface CountContextType {
   totalParagraphs: number | null;
@@ -7,21 +7,8 @@ interface CountContextType {
 
 const CountContext = createContext<CountContextType | undefined>(undefined);
 
-const API_BASE = "/python-api/api";
-
 export function CountProvider({ children }: { children: ReactNode }) {
   const [totalParagraphs, setTotalParagraphs] = useState<number | null>(null);
-
-  useEffect(() => {
-    fetch(`${API_BASE}/dictionary`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.meta?.total_paragraphs !== undefined) {
-          setTotalParagraphs(data.meta.total_paragraphs);
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   return (
     <CountContext.Provider value={{ totalParagraphs, setTotalParagraphs }}>

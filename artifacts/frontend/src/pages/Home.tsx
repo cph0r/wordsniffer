@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { FetchPanel } from "@/components/FetchPanel";
 import { SearchPanel } from "@/components/SearchPanel";
 import { DictionaryPanel } from "@/components/DictionaryPanel";
@@ -6,15 +6,15 @@ import { useParagraphCount } from "@/context/CountContext";
 import { DownloadCloud, Search, BookA } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const TABS = [
+  { id: "fetch" as const, label: "Fetch", icon: DownloadCloud },
+  { id: "search" as const, label: "Search", icon: Search },
+  { id: "dictionary" as const, label: "Dictionary", icon: BookA },
+] as const;
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"fetch" | "search" | "dictionary">("fetch");
   const { totalParagraphs } = useParagraphCount();
-
-  const tabs = [
-    { id: "fetch" as const, label: "Fetch", icon: DownloadCloud },
-    { id: "search" as const, label: "Search", icon: Search },
-    { id: "dictionary" as const, label: "Dictionary", icon: BookA },
-  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -33,7 +33,7 @@ export default function Home() {
 
       <div className="max-w-3xl mx-auto w-full px-5 mt-6">
         <nav className="flex gap-0 border-b border-border">
-          {tabs.map((tab) => {
+          {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (

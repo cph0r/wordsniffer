@@ -1,9 +1,15 @@
+import logging
+
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from db import get_db
 from models.paragraph import Paragraph
 from services.text_processing import normalize_search_words, search_paragraphs
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -31,7 +37,22 @@ def search(
             "error": None,
         }
 
-    paragraphs = db.query(Paragraph).all()
+    try:
+        paragraphs = db.query(Paragraph).all()
+    except SQLAlchemyError as exc:
+        logger.exception("Database error during search")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "data": None,
+                "meta": None,
+                "error": {
+                    "message": "Database error while searching paragraphs.",
+                    "type": "database_error",
+                },
+            },
+        )
+
     matching = [
         p.to_dict()
         for p in paragraphs
