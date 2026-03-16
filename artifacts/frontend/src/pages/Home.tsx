@@ -21,10 +21,13 @@ export default function Home() {
       <header className="border-b border-border sticky top-0 z-50 bg-background">
         <div className="max-w-3xl mx-auto w-full px-5">
           <div className="flex items-center justify-between h-14">
-            <h1 className="text-2xl font-extrabold tracking-tighter select-none">
-              <span className="text-foreground">Word</span>
-              <span className="text-foreground/50">Sniffer</span>
-            </h1>
+            <div className="flex items-center gap-2.5">
+              <img src="/logo.png" alt="WordSniffer" className="h-9 w-auto brightness-90" />
+              <h1 className="text-2xl font-extrabold tracking-tighter select-none">
+                <span className="text-foreground">Word</span>
+                <span className="text-foreground/50">Sniffer</span>
+              </h1>
+            </div>
             <span className="text-xs font-mono text-muted-foreground tabular-nums">
               {totalParagraphs !== null ? `${totalParagraphs} records` : "—"}
             </span>
