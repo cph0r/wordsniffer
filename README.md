@@ -29,6 +29,8 @@ WordSniffer is a full-stack word exploration tool with the nose of a bloodhound.
 
 ## Live Demo
 
+**[Try WordSniffer Live](https://wordsniffer.replit.app/)**
+
 WordSniffer is deployed on Replit. In production, a single FastAPI process serves both the API and the React frontend — no separate web server needed.
 
 ---
