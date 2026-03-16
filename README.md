@@ -23,7 +23,13 @@ WordSniffer is a full-stack word exploration tool with the nose of a bloodhound.
 | Backend    | Python 3.12, FastAPI, SQLAlchemy, PostgreSQL       |
 | Frontend   | React 19, TypeScript, Vite, TanStack Query, Tailwind CSS |
 | DevOps     | Docker, Docker Compose, GitHub Actions CI/CD       |
-| Quality    | Ruff (lint + format), pytest (57+ tests), pre-commit hooks |
+| Quality    | Ruff (lint + format), pytest (59 tests), pre-commit hooks |
+
+---
+
+## Live Demo
+
+WordSniffer is deployed on Replit. In production, a single FastAPI process serves both the API and the React frontend — no separate web server needed.
 
 ---
 
@@ -71,7 +77,7 @@ pnpm --filter @workspace/frontend run dev
 | Command         | What It Does                                     |
 | --------------- | ------------------------------------------------ |
 | `make dev`      | Start everything with Docker Compose              |
-| `make test`     | Run the full test suite (57+ tests)               |
+| `make test`     | Run the full test suite (59 tests)                |
 | `make lint`     | Check code style with Ruff                        |
 | `make format`   | Auto-fix code style                               |
 | `make typecheck`| TypeScript type checking                          |
@@ -83,7 +89,7 @@ pnpm --filter @workspace/frontend run dev
 
 ## API Endpoints
 
-All endpoints live under `/python-api/api/` and return a consistent envelope:
+All endpoints live under `/api/` and return a consistent envelope:
 
 ```json
 { "data": ..., "meta": ..., "error": null }
@@ -120,7 +126,7 @@ artifacts/
     routes/            #   API endpoints (fetch, search, dictionary, paragraphs)
     services/          #   Business logic (HTTP client, text processing)
     models/            #   SQLAlchemy ORM models
-    tests/             #   pytest test suite (57+ tests)
+    tests/             #   pytest test suite (59 tests)
     Dockerfile         #   Multi-stage production build
   frontend/            # React + Vite frontend
     src/
@@ -134,6 +140,19 @@ Makefile               # Developer shortcuts
 .github/workflows/     # CI/CD pipelines
 .pre-commit-config.yaml # Git hooks (lint on commit)
 ```
+
+---
+
+## Production Deployment
+
+In production, the FastAPI backend does double duty — it serves the API at `/api/*` and also serves the built React frontend as static files. All other routes fall through to `index.html` for SPA client-side routing.
+
+The build pipeline:
+1. Vite compiles the React frontend into static assets
+2. The built files are copied into the Python API's `static/` directory
+3. Uvicorn starts a single FastAPI process that handles everything
+
+This means zero CORS issues, zero proxy layers, and a single port to manage.
 
 ---
 
