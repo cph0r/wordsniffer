@@ -134,20 +134,25 @@ Stack: FastAPI, SQLAlchemy, PostgreSQL (`DATABASE_URL`), httpx (5s timeout), Pyd
 
 ### `artifacts/frontend` (`@workspace/frontend`)
 
-React + Vite frontend serving as an API Explorer for the Python FastAPI backend. Single-page app with three panels:
+React + Vite frontend serving as an API Explorer for the Python FastAPI backend. Hacker/cyberpunk terminal aesthetic with three tab-based panels:
 
-- **Ingestion panel**: Fetch paragraphs from the Python API, view paragraph cards with timestamps, scrollable session history
-- **Search panel**: Tag-input for multiple words, AND/OR toggle, results with highlighted matching words, result count, empty state
-- **Dictionary panel**: Get top 10 words button, word cards with frequency, phonetic, part of speech, definition. "Definition not available" for missing definitions
+- **INGEST panel (F1)**: Terminal-style log feed for fetching paragraphs. Green-on-black output with timestamps, auto-scrolling session log, "latest" badge on newest entry.
+- **SEARCH panel (F2)**: Command-line-style tag input with neon cyan chips, OR/AND toggle, results with neon glow word highlighting, staggered entry animations.
+- **LEXICON panel (F3)**: Ranked frequency list with animated neon bar charts, inline definitions, phonetics, part-of-speech badges.
 
-Stack: React, Vite, TailwindCSS, React Query, Framer Motion, date-fns. Dark mode professional design.
+Stack: React, Vite, TailwindCSS, React Query, Framer Motion, date-fns.
+
+Design: Hacker terminal theme — deep black backgrounds, neon green (#00ff41) primary, cyan (#00e5ff) and amber (#ffb300) accents. Fonts: Fira Code (body), Orbitron (headings), Share Tech Mono (labels). Effects: Matrix rain canvas background, CRT scanline overlay, vignette, glitch text animation on title, blinking cursor indicators. All animations respect `prefers-reduced-motion`. Matrix rain pauses when tab is hidden.
 
 - Calls Python API at `/python-api/api/*` via Vite dev server proxy (proxies to `http://localhost:8000`)
-- Sticky header with project title and live paragraph count badge
-- Inline error banners for failed API calls, loading skeletons/spinners
-- Responsive for desktop and tablet
+- Compact header with traffic-light dots, glitch title, connection status, record count, live clock
+- F1/F2/F3 keyboard shortcuts for tab navigation
+- Terminal-card component pattern: header bar + body, used across all panels
+- Inline error banners styled as terminal error output
+- Responsive for desktop and mobile
 - Entry: `src/App.tsx`, Pages: `src/pages/Home.tsx`
 - Panels: `src/components/FetchPanel.tsx`, `src/components/SearchPanel.tsx`, `src/components/DictionaryPanel.tsx`
+- Effects: `src/components/MatrixRain.tsx` (canvas animation), `src/components/GlitchText.tsx` (scramble effect)
 - API hooks: `src/hooks/use-api.ts` (plain fetch with React Query mutations)
 - Context: `src/context/CountContext.tsx` (paragraph count state)
 
