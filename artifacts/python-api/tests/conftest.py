@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from db import get_db
 from main import app
 from models.paragraph import Base
+from services.external_api import http_client
 
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite://"
 
@@ -26,6 +27,12 @@ def setup_database():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture(autouse=True)
+def setup_http_client():
+    http_client.start()
+    yield
 
 
 @pytest.fixture
@@ -46,7 +53,7 @@ async def client(db_session):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=app, raise_app_exceptions=False)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()
