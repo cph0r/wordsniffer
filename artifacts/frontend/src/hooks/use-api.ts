@@ -1,7 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { useParagraphCount } from "@/context/CountContext";
 
 const API_BASE = "/python-api/api";
+
+const PAGE_SIZE = 5;
 
 export interface APIError {
   message: string;
@@ -39,20 +41,35 @@ async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
   return data;
 }
 
-type RecentMeta = { count: number; total_paragraphs: number };
+type RecentMeta = {
+  count: number;
+  total_paragraphs: number;
+  limit: number;
+  offset: number;
+  has_more: boolean;
+};
 type RecentResponse = APIResponse<Paragraph[], RecentMeta>;
 
 export function useRecentParagraphs() {
   const { setTotalParagraphs } = useParagraphCount();
 
-  const query = useQuery<RecentResponse>({
+  const query = useInfiniteQuery<RecentResponse>({
     queryKey: ["recent-paragraphs"],
-    queryFn: () => fetcher<RecentResponse>(`${API_BASE}/paragraphs/recent?limit=5`),
+    queryFn: ({ pageParam = 0 }) =>
+      fetcher<RecentResponse>(
+        `${API_BASE}/paragraphs/recent?limit=${PAGE_SIZE}&offset=${pageParam}`
+      ),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.has_more
+        ? lastPage.meta.offset + lastPage.meta.limit
+        : undefined,
     staleTime: Infinity,
   });
 
-  if (query.data?.meta?.total_paragraphs !== undefined) {
-    const count = query.data.meta.total_paragraphs;
+  const firstPage = query.data?.pages[0];
+  if (firstPage?.meta?.total_paragraphs !== undefined) {
+    const count = firstPage.meta.total_paragraphs;
     queueMicrotask(() => setTotalParagraphs(count));
   }
 
@@ -73,20 +90,7 @@ export function useFetchParagraph() {
         setTotalParagraphs(res.meta.total_paragraphs);
       }
       if (!res.meta?.duplicate) {
-        queryClient.setQueryData<RecentResponse>(["recent-paragraphs"], (old) => {
-          if (!old || !res.data) return old;
-          const exists = old.data.some((p) => p.id === res.data.id);
-          if (exists) return old;
-          return {
-            ...old,
-            data: [res.data, ...old.data].slice(0, 5),
-            meta: {
-              ...old.meta,
-              count: Math.min((old.meta.count || 0) + 1, 5),
-              total_paragraphs: res.meta.total_paragraphs ?? old.meta.total_paragraphs,
-            },
-          };
-        });
+        queryClient.invalidateQueries({ queryKey: ["recent-paragraphs"] });
       }
       queryClient.invalidateQueries({ queryKey: ["dictionary"] });
     }

@@ -15,13 +15,19 @@ router = APIRouter()
 
 @router.get("/api/paragraphs/recent")
 def recent_paragraphs(
-    limit: int = Query(20, ge=1, le=100, description="Number of paragraphs to return"),
+    limit: int = Query(
+        5, ge=1, le=100, description="Number of paragraphs to return"
+    ),
+    offset: int = Query(
+        0, ge=0, description="Number of paragraphs to skip"
+    ),
     db: Session = Depends(get_db),
 ):
     try:
         paragraphs = (
             db.query(Paragraph)
             .order_by(Paragraph.fetched_at.desc())
+            .offset(offset)
             .limit(limit)
             .all()
         )
@@ -42,6 +48,12 @@ def recent_paragraphs(
 
     return {
         "data": [p.to_dict() for p in paragraphs],
-        "meta": {"count": len(paragraphs), "total_paragraphs": total},
+        "meta": {
+            "count": len(paragraphs),
+            "total_paragraphs": total,
+            "limit": limit,
+            "offset": offset,
+            "has_more": (offset + len(paragraphs)) < total,
+        },
         "error": None,
     }

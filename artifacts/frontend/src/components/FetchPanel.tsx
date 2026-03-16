@@ -14,9 +14,15 @@ const timeFormatter = new Intl.DateTimeFormat(undefined, {
 export function FetchPanel() {
   const { mutate, isPending, error } = useFetchParagraph();
   const { totalParagraphs } = useParagraphCount();
-  const { data: recentData, isLoading: isLoadingRecent } = useRecentParagraphs();
+  const {
+    data,
+    isLoading: isLoadingRecent,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useRecentParagraphs();
 
-  const history: Paragraph[] = recentData?.data ?? [];
+  const history: Paragraph[] = data?.pages.flatMap((p) => p.data) ?? [];
 
   const handleFetch = () => {
     mutate(undefined);
@@ -84,6 +90,18 @@ export function FetchPanel() {
           </motion.article>
         ))}
       </AnimatePresence>
+
+      {hasNextPage && (
+        <div className="flex justify-center pt-2">
+          <button
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="text-xs font-medium text-muted-foreground hover:text-foreground border border-border px-4 py-2 transition-colors disabled:opacity-50"
+          >
+            {isFetchingNextPage ? "Loading…" : "Load more"}
+          </button>
+        </div>
+      )}
 
       {history.length === 0 && !isPending && !error && !isLoadingRecent && (
         <div className="py-16 text-center">
