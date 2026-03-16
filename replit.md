@@ -134,25 +134,22 @@ Stack: FastAPI, SQLAlchemy, PostgreSQL (`DATABASE_URL`), httpx (5s timeout), Pyd
 
 ### `artifacts/frontend` (`@workspace/frontend`)
 
-React + Vite frontend serving as an API Explorer for the Python FastAPI backend. Hacker/cyberpunk terminal aesthetic with three tab-based panels:
+React + Vite frontend serving as an API Explorer for the Python FastAPI backend. Minimal black and white design with three tab-based panels:
 
-- **INGEST panel (F1)**: Terminal-style log feed for fetching paragraphs. Green-on-black output with timestamps, auto-scrolling session log, "latest" badge on newest entry.
-- **SEARCH panel (F2)**: Command-line-style tag input with neon cyan chips, OR/AND toggle, results with neon glow word highlighting, staggered entry animations.
-- **LEXICON panel (F3)**: Ranked frequency list with animated neon bar charts, inline definitions, phonetics, part-of-speech badges.
+- **Fetch panel**: Retrieve paragraphs, displayed as stacked cards with content, ID, timestamp, and source link
+- **Search panel**: Tag-input for multiple words, AND/OR toggle, results with highlighted matching words
+- **Dictionary panel**: Ranked frequency list with animated horizontal bars, inline definitions, phonetics, part of speech
 
 Stack: React, Vite, TailwindCSS, React Query, Framer Motion, date-fns.
 
-Design: Hacker terminal theme — deep black backgrounds, neon green (#00ff41) primary, cyan (#00e5ff) and amber (#ffb300) accents. Fonts: Fira Code (body), Orbitron (headings), Share Tech Mono (labels). Effects: Matrix rain canvas background, CRT scanline overlay, vignette, glitch text animation on title, blinking cursor indicators. All animations respect `prefers-reduced-motion`. Matrix rain pauses when tab is hidden.
+Design: Minimal monochrome — pure black background, white/gray text, no rounded corners, Inter + JetBrains Mono fonts. Clean information-dense layout.
 
 - Calls Python API at `/python-api/api/*` via Vite dev server proxy (proxies to `http://localhost:8000`)
-- Compact header with traffic-light dots, glitch title, connection status, record count, live clock
-- F1/F2/F3 keyboard shortcuts for tab navigation
-- Terminal-card component pattern: header bar + body, used across all panels
-- Inline error banners styled as terminal error output
+- Compact header with title and record count
+- Inline error banners for failed API calls
 - Responsive for desktop and mobile
 - Entry: `src/App.tsx`, Pages: `src/pages/Home.tsx`
 - Panels: `src/components/FetchPanel.tsx`, `src/components/SearchPanel.tsx`, `src/components/DictionaryPanel.tsx`
-- Effects: `src/components/MatrixRain.tsx` (canvas animation), `src/components/GlitchText.tsx` (scramble effect)
 - API hooks: `src/hooks/use-api.ts` (plain fetch with React Query mutations)
 - Context: `src/context/CountContext.tsx` (paragraph count state)
 
