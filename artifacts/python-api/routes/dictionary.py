@@ -9,7 +9,7 @@ from services.text_processing import word_frequency
 router = APIRouter()
 
 
-@router.get("/dictionary")
+@router.get("/api/dictionary")
 async def dictionary(db: Session = Depends(get_db)):
     paragraphs = db.query(Paragraph).all()
 
@@ -42,7 +42,9 @@ async def dictionary(db: Session = Depends(get_db)):
             {
                 "word": word,
                 "frequency": freq,
-                "definition": defn.get("definition"),
+                "definition": defn.get("definition")
+                if defn.get("found")
+                else "definition_not_found",
                 "phonetic": defn.get("phonetic"),
                 "part_of_speech": defn.get("part_of_speech"),
                 "found": defn.get("found", False),

@@ -1,5 +1,6 @@
 import httpx
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -11,29 +12,35 @@ from services.external_api import fetch_paragraph
 router = APIRouter()
 
 
-@router.get("/fetch")
+@router.get("/api/fetch")
 async def fetch_and_store(db: Session = Depends(get_db)):
     try:
         text = await fetch_paragraph()
     except (httpx.RequestError, httpx.HTTPStatusError) as exc:
-        return {
-            "data": None,
-            "meta": None,
-            "error": {
-                "message": f"Failed to fetch paragraph from external API: {exc}",
-                "type": "external_api_error",
+        return JSONResponse(
+            status_code=502,
+            content={
+                "data": None,
+                "meta": None,
+                "error": {
+                    "message": f"Failed to fetch paragraph from external API: {exc}",
+                    "type": "external_api_error",
+                },
             },
-        }
+        )
 
     if not text:
-        return {
-            "data": None,
-            "meta": None,
-            "error": {
-                "message": "External API returned empty content",
-                "type": "empty_response",
+        return JSONResponse(
+            status_code=502,
+            content={
+                "data": None,
+                "meta": None,
+                "error": {
+                    "message": "External API returned empty content",
+                    "type": "empty_response",
+                },
             },
-        }
+        )
 
     paragraph = Paragraph(content=text, source_url=METAPHORPSUM_URL)
     try:

@@ -8,7 +8,7 @@ from services.text_processing import normalize_search_words, search_paragraphs
 router = APIRouter()
 
 
-@router.get("/search")
+@router.get("/api/search")
 def search(
     words: str = Query(
         ...,

@@ -14,7 +14,12 @@ if not _database_url:
         "Please configure it before starting the application."
     )
 
-engine = create_engine(_database_url, pool_pre_ping=True, pool_size=5, max_overflow=10)
+_engine_kwargs: dict = {"pool_pre_ping": True}
+if _database_url.startswith("postgresql"):
+    _engine_kwargs["pool_size"] = 5
+    _engine_kwargs["max_overflow"] = 10
+
+engine = create_engine(_database_url, **_engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
