@@ -4,13 +4,15 @@ dev:
 	docker compose up --build
 
 test:
-	cd artifacts/python-api && python -m pytest tests/ -v --tb=short
+	docker compose run --rm --no-deps python-api python -m pytest tests/ -v --tb=short
 
 lint:
-	cd artifacts/python-api && ruff check . && ruff format --check .
+	docker compose run --rm --no-deps python-api ruff check . && \
+	docker compose run --rm --no-deps python-api ruff format --check .
 
 format:
-	cd artifacts/python-api && ruff check --fix . && ruff format .
+	docker compose run --rm --no-deps python-api ruff check --fix . && \
+	docker compose run --rm --no-deps python-api ruff format .
 
 build:
 	docker compose build
