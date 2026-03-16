@@ -336,9 +336,7 @@ class TestHealthEndpoint:
 class TestGlobalErrorHandler:
     @patch("routes.fetch.fetch_paragraph", new_callable=AsyncMock)
     @pytest.mark.asyncio
-    async def test_unhandled_exception_returns_structured_500(
-        self, mock_fetch, client
-    ):
+    async def test_unhandled_exception_returns_structured_500(self, mock_fetch, client):
         mock_fetch.side_effect = RuntimeError("Something unexpected")
         response = await client.get("/api/fetch")
         assert response.status_code == 500

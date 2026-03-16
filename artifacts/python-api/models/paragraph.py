@@ -21,9 +21,7 @@ class Paragraph(Base):
     )
     source_url = Column(Text, nullable=False)
 
-    __table_args__ = (
-        Index("ix_paragraphs_fetched_at", fetched_at.desc()),
-    )
+    __table_args__ = (Index("ix_paragraphs_fetched_at", fetched_at.desc()),)
 
     def to_dict(self) -> dict:
         return {

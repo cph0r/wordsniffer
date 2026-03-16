@@ -15,12 +15,8 @@ router = APIRouter()
 
 @router.get("/api/paragraphs/recent")
 def recent_paragraphs(
-    limit: int = Query(
-        5, ge=1, le=100, description="Number of paragraphs to return"
-    ),
-    offset: int = Query(
-        0, ge=0, description="Number of paragraphs to skip"
-    ),
+    limit: int = Query(5, ge=1, le=100, description="Number of paragraphs to return"),
+    offset: int = Query(0, ge=0, description="Number of paragraphs to skip"),
     db: Session = Depends(get_db),
 ):
     try:

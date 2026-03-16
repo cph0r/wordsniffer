@@ -64,19 +64,14 @@ def search(
         for word in normalized_words:
             like_pattern = f"%{word}%"
             if operator == "and":
-                query = query.filter(
-                    Paragraph.content.ilike(like_pattern)
-                )
+                query = query.filter(Paragraph.content.ilike(like_pattern))
             else:
                 break
 
         if operator == "or":
             from sqlalchemy import or_
 
-            conditions = [
-                Paragraph.content.ilike(f"%{w}%")
-                for w in normalized_words
-            ]
+            conditions = [Paragraph.content.ilike(f"%{w}%") for w in normalized_words]
             query = db.query(Paragraph).filter(or_(*conditions))
 
         candidates = query.all()
