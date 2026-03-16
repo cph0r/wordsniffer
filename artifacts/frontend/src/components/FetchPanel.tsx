@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useFetchParagraph, type Paragraph } from "@/hooks/use-api";
+import { useParagraphCount } from "@/context/CountContext";
 import { format } from "date-fns";
-import { History, BookOpen, AlertCircle, Sparkles } from "lucide-react";
+import { History, BookOpen, AlertCircle, Sparkles, Database } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function FetchPanel() {
   const { mutate, isPending, error } = useFetchParagraph();
+  const { totalParagraphs } = useParagraphCount();
   const [history, setHistory] = useState<Paragraph[]>([]);
 
   const handleFetch = () => {
@@ -35,10 +37,18 @@ export function FetchPanel() {
             Fetch random paragraphs from external sources and index them securely.
           </p>
         </div>
-        <Button onClick={handleFetch} isLoading={isPending} size="lg" className="w-full md:w-auto shadow-primary/25">
-          <Sparkles className="w-4 h-4 mr-2" />
-          Fetch New Paragraph
-        </Button>
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          {totalParagraphs !== null && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Database className="w-4 h-4" />
+              <span className="font-mono font-bold text-foreground">{totalParagraphs}</span> stored
+            </div>
+          )}
+          <Button onClick={handleFetch} isLoading={isPending} size="lg" className="flex-1 md:flex-initial shadow-primary/25">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Fetch New Paragraph
+          </Button>
+        </div>
       </div>
 
       {error && (

@@ -62,8 +62,6 @@ export function useFetchParagraph() {
 }
 
 export function useSearchParagraphs() {
-  const { setTotalParagraphs } = useParagraphCount();
-
   return useMutation({
     mutationFn: ({ words, operator }: { words: string[]; operator: "or" | "and" }) => {
       const params = new URLSearchParams({
