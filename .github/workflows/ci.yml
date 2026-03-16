@@ -26,10 +26,12 @@ jobs:
         run: pip install ruff==0.11.12
 
       - name: Run Ruff check
-        run: ruff check artifacts/python-api/
+        working-directory: artifacts/python-api
+        run: ruff check .
 
       - name: Run Ruff format check
-        run: ruff format --check artifacts/python-api/
+        working-directory: artifacts/python-api
+        run: ruff format --check .
 
   test:
     name: Test (pytest)
