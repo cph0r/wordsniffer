@@ -4,7 +4,7 @@ DATABASE_URL: str = os.environ.get("DATABASE_URL", "")
 PORT: int = int(os.environ.get("PORT", "8000"))
 METAPHORPSUM_URL: str = "http://metaphorpsum.com/paragraphs/1/50"
 DICTIONARY_API_URL: str = "https://api.dictionaryapi.dev/api/v2/entries/en"
-FETCH_TIMEOUT: float = 10.0
+FETCH_TIMEOUT: float = 5.0
 
 STOP_WORDS: set[str] = {
     "a",

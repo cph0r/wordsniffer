@@ -96,20 +96,21 @@ Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHea
 
 Python 3.12 FastAPI service with 3 endpoints for paragraph management:
 
-- **`GET /python-api/fetch`** — Fetches a 50-sentence paragraph from metaphorpsum.com, stores in PostgreSQL, returns it. Deduplicates.
-- **`GET /python-api/search?words=x,y&operator=or|and`** — Searches stored paragraphs by words with OR/AND logic. Case-insensitive.
-- **`GET /python-api/dictionary`** — Returns top 10 most frequent words (excluding stop words) with definitions from dictionaryapi.dev.
-- **`GET /python-api/health`** — Health check.
+- **`GET /api/fetch`** — Fetches a 50-sentence paragraph from metaphorpsum.com, stores in PostgreSQL, returns it. Deduplicates. Returns HTTP 502 on fetch failure.
+- **`GET /api/search?words=x,y&operator=or|and`** — Searches stored paragraphs by words with OR/AND logic. Token-based matching (not substring). Case-insensitive.
+- **`GET /api/dictionary`** — Returns top 10 most frequent words (excluding stop words) with definitions from dictionaryapi.dev. Returns `"definition_not_found"` for missing words.
+- **`GET /health`** — Health check.
+- All endpoints return `{data, meta, error}` JSON envelopes. Routes prefixed with `root_path="/python-api"`.
 
-Stack: FastAPI, SQLAlchemy, PostgreSQL (`DATABASE_URL`), httpx, Pydantic. Linting: Ruff.
+Stack: FastAPI, SQLAlchemy, PostgreSQL (`DATABASE_URL`), httpx (5s timeout), Pydantic. Linting: Ruff.
 
 - Entry: `main.py` — FastAPI app with lifespan, CORS, routes
 - Routes: `routes/fetch.py`, `routes/search.py`, `routes/dictionary.py`
 - Services: `services/text_processing.py` (tokenize, frequency, search), `services/external_api.py` (metaphorpsum, dictionaryapi)
 - Models: `models/paragraph.py` — SQLAlchemy `Paragraph` model
-- Config: `config.py` — environment vars, stop words
-- DB: `db.py` — SQLAlchemy engine, session, `init_db()`
-- Tests: `tests/` — pytest with SQLite for unit/integration tests (42 tests)
+- Config: `config.py` — environment vars, stop words, 5s fetch timeout
+- DB: `db.py` — SQLAlchemy engine (dialect-aware: pool options for PostgreSQL only), session, `init_db()`
+- Tests: `tests/` — pytest + httpx.AsyncClient with in-memory SQLite (StaticPool) for unit/integration tests (45 tests)
 - Run: `cd artifacts/python-api && uvicorn main:app --host 0.0.0.0 --port 8000`
 - Lint: `cd artifacts/python-api && ruff check . && ruff format --check .`
 - Test: `cd artifacts/python-api && python3 -m pytest tests/ -v`

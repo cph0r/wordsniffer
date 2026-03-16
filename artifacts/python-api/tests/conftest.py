@@ -3,18 +3,20 @@ import os
 os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import StaticPool, create_engine
 from sqlalchemy.orm import sessionmaker
 
 from db import get_db
 from main import app
 from models.paragraph import Base
 
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test.db"
+SQLALCHEMY_TEST_DATABASE_URL = "sqlite://"
 
 engine = create_engine(
-    SQLALCHEMY_TEST_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_TEST_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -36,7 +38,7 @@ def db_session():
 
 
 @pytest.fixture
-def client(db_session):
+async def client(db_session):
     def override_get_db():
         try:
             yield db_session
@@ -44,6 +46,7 @@ def client(db_session):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app, root_path="/python-api") as c:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as c:
         yield c
     app.dependency_overrides.clear()

@@ -1,5 +1,7 @@
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from models.paragraph import Paragraph
 
 SAMPLE_PARAGRAPH = (
@@ -11,9 +13,10 @@ SAMPLE_PARAGRAPH = (
 
 class TestFetchEndpoint:
     @patch("routes.fetch.fetch_paragraph", new_callable=AsyncMock)
-    def test_fetch_stores_paragraph(self, mock_fetch, client, db_session):
+    @pytest.mark.asyncio
+    async def test_fetch_stores_paragraph(self, mock_fetch, client, db_session):
         mock_fetch.return_value = SAMPLE_PARAGRAPH
-        response = client.get("/fetch")
+        response = await client.get("/api/fetch")
         assert response.status_code == 200
         body = response.json()
         assert body["error"] is None
@@ -22,30 +25,34 @@ class TestFetchEndpoint:
         assert body["meta"]["duplicate"] is False
 
     @patch("routes.fetch.fetch_paragraph", new_callable=AsyncMock)
-    def test_fetch_duplicate_handling(self, mock_fetch, client, db_session):
+    @pytest.mark.asyncio
+    async def test_fetch_duplicate_handling(self, mock_fetch, client, db_session):
         mock_fetch.return_value = SAMPLE_PARAGRAPH
-        client.get("/fetch")
-        response = client.get("/fetch")
+        await client.get("/api/fetch")
+        response = await client.get("/api/fetch")
         body = response.json()
         assert body["data"]["content"] == SAMPLE_PARAGRAPH
         assert body["meta"]["duplicate"] is True
 
     @patch("routes.fetch.fetch_paragraph", new_callable=AsyncMock)
-    def test_fetch_external_api_failure(self, mock_fetch, client):
+    @pytest.mark.asyncio
+    async def test_fetch_external_api_failure(self, mock_fetch, client):
         import httpx
 
         mock_fetch.side_effect = httpx.RequestError("Connection failed")
-        response = client.get("/fetch")
-        assert response.status_code == 200
+        response = await client.get("/api/fetch")
+        assert response.status_code == 502
         body = response.json()
         assert body["error"] is not None
         assert body["error"]["type"] == "external_api_error"
         assert body["data"] is None
 
     @patch("routes.fetch.fetch_paragraph", new_callable=AsyncMock)
-    def test_fetch_empty_response(self, mock_fetch, client):
+    @pytest.mark.asyncio
+    async def test_fetch_empty_response(self, mock_fetch, client):
         mock_fetch.return_value = ""
-        response = client.get("/fetch")
+        response = await client.get("/api/fetch")
+        assert response.status_code == 502
         body = response.json()
         assert body["error"] is not None
         assert body["error"]["type"] == "empty_response"
@@ -71,56 +78,77 @@ class TestSearchEndpoint:
             db_session.add(p)
         db_session.commit()
 
-    def test_search_or_operator(self, client, db_session):
+    @pytest.mark.asyncio
+    async def test_search_or_operator(self, client, db_session):
         self._seed_paragraphs(db_session)
-        response = client.get("/search?words=python,java&operator=or")
+        response = await client.get("/api/search?words=python,java&operator=or")
         body = response.json()
         assert body["error"] is None
         assert body["meta"]["count"] == 3
         assert body["meta"]["operator"] == "or"
 
-    def test_search_and_operator(self, client, db_session):
+    @pytest.mark.asyncio
+    async def test_search_and_operator(self, client, db_session):
         self._seed_paragraphs(db_session)
-        response = client.get("/search?words=python,java&operator=and")
+        response = await client.get("/api/search?words=python,java&operator=and")
         body = response.json()
         assert body["error"] is None
         assert body["meta"]["count"] == 1
         assert "Python and Java" in body["data"][0]["content"]
 
-    def test_search_no_results(self, client, db_session):
+    @pytest.mark.asyncio
+    async def test_search_no_results(self, client, db_session):
         self._seed_paragraphs(db_session)
-        response = client.get("/search?words=nonexistentword&operator=or")
+        response = await client.get("/api/search?words=nonexistentword&operator=or")
         body = response.json()
         assert body["error"] is None
         assert body["meta"]["count"] == 0
         assert body["data"] == []
 
-    def test_search_case_insensitive(self, client, db_session):
+    @pytest.mark.asyncio
+    async def test_search_case_insensitive(self, client, db_session):
         self._seed_paragraphs(db_session)
-        response = client.get("/search?words=PYTHON&operator=or")
+        response = await client.get("/api/search?words=PYTHON&operator=or")
         body = response.json()
         assert body["meta"]["count"] == 2
 
-    def test_search_default_operator(self, client, db_session):
+    @pytest.mark.asyncio
+    async def test_search_default_operator(self, client, db_session):
         self._seed_paragraphs(db_session)
-        response = client.get("/search?words=python")
+        response = await client.get("/api/search?words=python")
         body = response.json()
         assert body["meta"]["operator"] == "or"
         assert body["meta"]["count"] == 2
 
-    def test_search_empty_words(self, client, db_session):
+    @pytest.mark.asyncio
+    async def test_search_empty_words(self, client, db_session):
         self._seed_paragraphs(db_session)
-        response = client.get("/search?words=")
+        response = await client.get("/api/search?words=")
         body = response.json()
         assert body["data"] == []
 
-    def test_search_invalid_operator(self, client, db_session):
-        response = client.get("/search?words=test&operator=xor")
+    @pytest.mark.asyncio
+    async def test_search_invalid_operator(self, client, db_session):
+        response = await client.get("/api/search?words=test&operator=xor")
         assert response.status_code == 422
 
-    def test_search_missing_words_param(self, client, db_session):
-        response = client.get("/search")
+    @pytest.mark.asyncio
+    async def test_search_missing_words_param(self, client, db_session):
+        response = await client.get("/api/search")
         assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_search_no_substring_false_positive(self, client, db_session):
+        db_session.add(
+            Paragraph(
+                content="JavaScript is a popular language",
+                source_url="http://test.com",
+            )
+        )
+        db_session.commit()
+        response = await client.get("/api/search?words=java&operator=or")
+        body = response.json()
+        assert body["meta"]["count"] == 0
 
 
 class TestDictionaryEndpoint:
@@ -142,7 +170,10 @@ class TestDictionaryEndpoint:
         db_session.commit()
 
     @patch("routes.dictionary.fetch_definitions_batch", new_callable=AsyncMock)
-    def test_dictionary_returns_definitions(self, mock_fetch_defs, client, db_session):
+    @pytest.mark.asyncio
+    async def test_dictionary_returns_definitions(
+        self, mock_fetch_defs, client, db_session
+    ):
         self._seed_paragraphs(db_session)
         mock_fetch_defs.return_value = [
             {
@@ -160,21 +191,23 @@ class TestDictionaryEndpoint:
                 "found": True,
             },
         ]
-        response = client.get("/dictionary")
+        response = await client.get("/api/dictionary")
         body = response.json()
         assert body["error"] is None
         assert len(body["data"]) > 0
         assert body["data"][0]["frequency"] > 0
 
-    def test_dictionary_empty_db(self, client, db_session):
-        response = client.get("/dictionary")
+    @pytest.mark.asyncio
+    async def test_dictionary_empty_db(self, client, db_session):
+        response = await client.get("/api/dictionary")
         body = response.json()
         assert body["error"] is None
         assert body["data"] == []
         assert body["meta"]["total_paragraphs"] == 0
 
     @patch("routes.dictionary.fetch_definitions_batch", new_callable=AsyncMock)
-    def test_dictionary_handles_missing_definitions(
+    @pytest.mark.asyncio
+    async def test_dictionary_handles_missing_definitions(
         self, mock_fetch_defs, client, db_session
     ):
         self._seed_paragraphs(db_session)
@@ -187,13 +220,17 @@ class TestDictionaryEndpoint:
                 "found": False,
             },
         ]
-        response = client.get("/dictionary")
+        response = await client.get("/api/dictionary")
         body = response.json()
         assert body["error"] is None
+        found_item = next((d for d in body["data"] if d["word"] == "function"), None)
+        if found_item:
+            assert found_item["definition"] == "definition_not_found"
 
 
 class TestHealthEndpoint:
-    def test_health_check(self, client):
-        response = client.get("/health")
+    @pytest.mark.asyncio
+    async def test_health_check(self, client):
+        response = await client.get("/health")
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
