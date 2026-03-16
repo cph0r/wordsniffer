@@ -21,7 +21,8 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 ```text
 artifacts-monorepo/
 ├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
+│   ├── api-server/         # Express API server (TypeScript)
+│   └── python-api/         # Python FastAPI server
 ├── lib/                    # Shared libraries
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
@@ -90,6 +91,28 @@ Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used b
 ### `lib/api-client-react` (`@workspace/api-client-react`)
 
 Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
+
+### `artifacts/python-api` (Python FastAPI)
+
+Python 3.12 FastAPI service with 3 endpoints for paragraph management:
+
+- **`GET /python-api/fetch`** — Fetches a 50-sentence paragraph from metaphorpsum.com, stores in PostgreSQL, returns it. Deduplicates.
+- **`GET /python-api/search?words=x,y&operator=or|and`** — Searches stored paragraphs by words with OR/AND logic. Case-insensitive.
+- **`GET /python-api/dictionary`** — Returns top 10 most frequent words (excluding stop words) with definitions from dictionaryapi.dev.
+- **`GET /python-api/health`** — Health check.
+
+Stack: FastAPI, SQLAlchemy, PostgreSQL (`DATABASE_URL`), httpx, Pydantic. Linting: Ruff.
+
+- Entry: `main.py` — FastAPI app with lifespan, CORS, routes
+- Routes: `routes/fetch.py`, `routes/search.py`, `routes/dictionary.py`
+- Services: `services/text_processing.py` (tokenize, frequency, search), `services/external_api.py` (metaphorpsum, dictionaryapi)
+- Models: `models/paragraph.py` — SQLAlchemy `Paragraph` model
+- Config: `config.py` — environment vars, stop words
+- DB: `db.py` — SQLAlchemy engine, session, `init_db()`
+- Tests: `tests/` — pytest with SQLite for unit/integration tests (42 tests)
+- Run: `cd artifacts/python-api && uvicorn main:app --host 0.0.0.0 --port 8000`
+- Lint: `cd artifacts/python-api && ruff check . && ruff format --check .`
+- Test: `cd artifacts/python-api && python3 -m pytest tests/ -v`
 
 ### `scripts` (`@workspace/scripts`)
 
