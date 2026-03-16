@@ -34,6 +34,14 @@ export interface WordDefinition {
 
 async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(
+      res.ok
+        ? "The API returned an unexpected response. Please try again."
+        : `API request failed (${res.status}). Please try again.`
+    );
+  }
   const data = await res.json();
   if (res.status >= 400 || data.error) {
     throw new Error(data.error?.message || "An unexpected API error occurred.");
