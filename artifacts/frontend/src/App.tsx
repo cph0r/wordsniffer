@@ -7,9 +7,8 @@ import Home from "@/pages/Home";
 function NotFound() {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground">
-      <h1 className="text-4xl font-display font-black neon-text opacity-30 mb-4">404</h1>
-      <h2 className="text-lg font-display font-bold tracking-wider uppercase neon-text">PATH_NOT_FOUND</h2>
-      <p className="mt-2 text-muted-foreground text-[11px] font-mono">The requested endpoint does not exist.</p>
+      <h1 className="text-5xl font-bold text-foreground/20 mb-2">404</h1>
+      <p className="text-sm text-muted-foreground">Page not found.</p>
     </div>
   );
 }
