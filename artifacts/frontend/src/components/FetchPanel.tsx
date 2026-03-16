@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useFetchParagraph, useRecentParagraphs, type Paragraph } from "@/hooks/use-api";
 import { useParagraphCount } from "@/context/CountContext";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const timeFormatter = new Intl.DateTimeFormat(undefined, {
@@ -10,6 +11,57 @@ const timeFormatter = new Intl.DateTimeFormat(undefined, {
   second: "2-digit",
   hour12: false,
 });
+
+function ParagraphCard({ p }: { p: Paragraph }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
+      className="border border-border p-4 space-y-3"
+    >
+      <p
+        className={`text-sm leading-relaxed text-foreground/85 ${expanded ? "" : "line-clamp-3"}`}
+      >
+        {p.content}
+      </p>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground font-mono">
+          #{p.id} · {timeFormatter.format(new Date(p.fetched_at))}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+          >
+            {expanded ? (
+              <>
+                <EyeOff className="w-3 h-3" />
+                Collapse
+              </>
+            ) : (
+              <>
+                <Eye className="w-3 h-3" />
+                View
+              </>
+            )}
+          </button>
+          <a
+            href={p.source_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
+          >
+            <ExternalLink className="w-3 h-3" />
+            Source
+          </a>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
 
 export function FetchPanel() {
   const { mutate, isPending, error } = useFetchParagraph();
@@ -66,28 +118,7 @@ export function FetchPanel() {
 
       <AnimatePresence>
         {history.map((p, i) => (
-          <motion.article
-            key={`${p.id}-${i}`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="border border-border p-4 space-y-3"
-          >
-            <p className="text-sm leading-relaxed text-foreground/85 line-clamp-3">
-              {p.content}
-            </p>
-            <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
-              <span>#{p.id} · {timeFormatter.format(new Date(p.fetched_at))}</span>
-              <a
-                href={p.source_url}
-                target="_blank"
-                rel="noreferrer"
-                className="hover:text-foreground underline underline-offset-2 transition-colors"
-              >
-                source
-              </a>
-            </div>
-          </motion.article>
+          <ParagraphCard key={`${p.id}-${i}`} p={p} />
         ))}
       </AnimatePresence>
 
