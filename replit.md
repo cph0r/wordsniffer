@@ -22,19 +22,36 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 artifacts-monorepo/
 ├── artifacts/              # Deployable applications
 │   ├── api-server/         # Express API server (TypeScript)
-│   └── python-api/         # Python FastAPI server
+│   ├── frontend/           # React + Vite frontend (API Explorer)
+│   └── python-api/         # Python FastAPI server (with Dockerfile)
 ├── lib/                    # Shared libraries
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
 │   └── db/                 # Drizzle ORM schema + DB connection
 ├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
+│   └── src/                # Individual .ts scripts
+├── .github/workflows/      # CI/CD pipelines (ci.yml, cd.yml)
+├── docker-compose.yml      # Multi-service Docker Compose
+├── docker-compose.override.yml  # Dev overrides (hot reload)
+├── Makefile                # Convenience targets (dev, test, lint, build, etc.)
+├── .env.example            # Environment variable template
+├── .pre-commit-config.yaml # Pre-commit hooks (ruff, formatting)
+├── CONTRIBUTING.md         # Local development guide
+├── pnpm-workspace.yaml     # pnpm workspace config
+├── tsconfig.base.json      # Shared TS options
 ├── tsconfig.json           # Root TS project references
 └── package.json            # Root package with hoisted devDeps
 ```
+
+## DevOps
+
+- **Docker**: Multi-stage Dockerfile at `artifacts/python-api/Dockerfile` (python:3.12-slim, venv-based)
+- **Docker Compose**: `docker-compose.yml` wires python-api + postgres:16 with named volume. `docker-compose.override.yml` adds hot-reload for dev.
+- **Makefile**: `make dev`, `make test`, `make lint`, `make format`, `make build`, `make migrate`, `make typecheck`, `make clean`
+- **CI** (`.github/workflows/ci.yml`): lint, test (with postgres service), docker build, TypeScript typecheck — all parallel
+- **CD** (`.github/workflows/cd.yml`): builds & pushes to GHCR on push to main (latest + SHA tags)
+- **Pre-commit**: `.pre-commit-config.yaml` with ruff, trailing-whitespace, end-of-file-fixer, check-yaml, check-json
 
 ## TypeScript & Composite Projects
 

@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-paragraphapi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-paragraphapi}
+      POSTGRES_DB: ${POSTGRES_DB:-paragraphapi}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-paragraphapi}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  python-api:
+    build:
+      context: ./artifacts/python-api
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-paragraphapi}:${POSTGRES_PASSWORD:-paragraphapi}@postgres:5432/${POSTGRES_DB:-paragraphapi}
+      PORT: ${PORT:-8000}
+    ports:
+      - "${PORT:-8000}:8000"
+
+volumes:
+  pgdata:
