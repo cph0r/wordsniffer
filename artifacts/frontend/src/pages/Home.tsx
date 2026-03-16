@@ -11,7 +11,7 @@ export default function Home() {
   const { totalParagraphs } = useParagraphCount();
 
   const tabs = [
-    { id: "fetch", label: "Ingestion", icon: DownloadCloud },
+    { id: "fetch", label: "Fetch", icon: DownloadCloud },
     { id: "search", label: "Search", icon: Search },
     { id: "dictionary", label: "Dictionary", icon: BookA },
   ] as const;
@@ -75,6 +75,15 @@ export default function Home() {
           {activeTab === "dictionary" && <DictionaryPanel />}
         </div>
       </main>
+
+      <footer className="mt-16 border-t border-border/40 bg-background/50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <p>Paragraph API Explorer &mdash; Python Skills Assessment</p>
+            <p>Built with FastAPI, React &amp; PostgreSQL</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
