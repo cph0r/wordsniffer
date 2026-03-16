@@ -67,7 +67,7 @@ export function FetchPanel() {
             transition={{ duration: 0.2 }}
             className="border border-border p-4 space-y-3"
           >
-            <p className="text-sm leading-relaxed text-foreground/85">
+            <p className="text-sm leading-relaxed text-foreground/85 line-clamp-3">
               {p.content}
             </p>
             <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">

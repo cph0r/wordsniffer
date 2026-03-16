@@ -47,7 +47,7 @@ export function useRecentParagraphs() {
 
   const query = useQuery<RecentResponse>({
     queryKey: ["recent-paragraphs"],
-    queryFn: () => fetcher<RecentResponse>(`${API_BASE}/paragraphs/recent?limit=20`),
+    queryFn: () => fetcher<RecentResponse>(`${API_BASE}/paragraphs/recent?limit=5`),
     staleTime: Infinity,
   });
 
@@ -79,10 +79,10 @@ export function useFetchParagraph() {
           if (exists) return old;
           return {
             ...old,
-            data: [res.data, ...old.data].slice(0, 20),
+            data: [res.data, ...old.data].slice(0, 5),
             meta: {
               ...old.meta,
-              count: Math.min((old.meta.count || 0) + 1, 20),
+              count: Math.min((old.meta.count || 0) + 1, 5),
               total_paragraphs: res.meta.total_paragraphs ?? old.meta.total_paragraphs,
             },
           };
