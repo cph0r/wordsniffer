@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useFetchParagraph, useRecentParagraphs, type Paragraph } from "@/hooks/use-api";
-import { useParagraphCount } from "@/context/CountContext";
 import { AlertCircle, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -65,7 +64,6 @@ function ParagraphCard({ p }: { p: Paragraph }) {
 
 export function FetchPanel() {
   const { mutate, isPending, error } = useFetchParagraph();
-  const { totalParagraphs } = useParagraphCount();
   const {
     data,
     isLoading: isLoadingRecent,

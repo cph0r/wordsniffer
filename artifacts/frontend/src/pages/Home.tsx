@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { FetchPanel } from "@/components/FetchPanel";
 import { SearchPanel } from "@/components/SearchPanel";
 import { DictionaryPanel } from "@/components/DictionaryPanel";
