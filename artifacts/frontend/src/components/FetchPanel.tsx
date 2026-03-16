@@ -1,129 +1,152 @@
-import React, { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useFetchParagraph, type Paragraph } from "@/hooks/use-api";
 import { useParagraphCount } from "@/context/CountContext";
 import { format } from "date-fns";
-import { History, BookOpen, AlertCircle, Sparkles, Database } from "lucide-react";
+import { DownloadCloud, Database, AlertCircle, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+function TerminalLine({ children, prefix = ">", color = "text-neon" }: { children: React.ReactNode; prefix?: string; color?: string }) {
+  return (
+    <div className="flex gap-2 leading-relaxed">
+      <span className={`${color} shrink-0 font-bold`}>{prefix}</span>
+      <span className="text-foreground/80">{children}</span>
+    </div>
+  );
+}
 
 export function FetchPanel() {
   const { mutate, isPending, error } = useFetchParagraph();
   const { totalParagraphs } = useParagraphCount();
   const [history, setHistory] = useState<Paragraph[]>([]);
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [history.length]);
 
   const handleFetch = () => {
     mutate(undefined, {
       onSuccess: (res) => {
         if (res.data) {
-          setHistory((prev) => [res.data, ...prev]);
+          setHistory((prev) => [...prev, res.data]);
         }
       }
     });
   };
 
-  const current = history[0];
-
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <BookOpen className="text-primary h-6 w-6" />
-            Content Ingestion
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Fetch random paragraphs from external sources and index them securely.
-          </p>
+    <div className="space-y-3 animate-fade-in">
+      <div className="terminal-card rounded">
+        <div className="terminal-header">
+          <DownloadCloud className="w-3 h-3 text-neon" />
+          <span className="neon-text">CONTENT_INGEST</span>
+          <span className="ml-auto flex items-center gap-3">
+            {totalParagraphs !== null && (
+              <span className="flex items-center gap-1">
+                <Database className="w-3 h-3" />
+                <span className="neon-text-cyan font-bold">{totalParagraphs}</span> stored
+              </span>
+            )}
+          </span>
         </div>
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          {totalParagraphs !== null && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Database className="w-4 h-4" />
-              <span className="font-mono font-bold text-foreground">{totalParagraphs}</span> stored
-            </div>
-          )}
-          <Button onClick={handleFetch} isLoading={isPending} size="lg" className="flex-1 md:flex-initial shadow-primary/25">
-            <Sparkles className="w-4 h-4 mr-2" />
-            Fetch New Paragraph
+
+        <div className="terminal-body space-y-1">
+          <TerminalLine prefix="$" color="neon-text">
+            <span className="text-muted-foreground">Fetch random paragraphs from external sources and index to database.</span>
+          </TerminalLine>
+          <TerminalLine prefix="$" color="neon-text">
+            <span className="text-muted-foreground">
+              Run <span className="neon-text font-bold">INGEST</span> to retrieve and store a new entry.
+            </span>
+          </TerminalLine>
+        </div>
+
+        <div className="px-3 pb-3 pt-1">
+          <Button
+            onClick={handleFetch}
+            isLoading={isPending}
+            className="w-full glitch-hover"
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+            {isPending ? "FETCHING..." : "EXECUTE INGEST"}
           </Button>
         </div>
       </div>
 
       {error && (
-        <div className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-xl flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
-          <div>
-            <h4 className="font-bold">Fetch Failed</h4>
-            <p className="text-sm opacity-90">{error.message}</p>
+        <div className="terminal-card rounded border-neon-red/30">
+          <div className="terminal-header !border-neon-red/20">
+            <AlertCircle className="w-3 h-3 text-neon-red" />
+            <span className="text-neon-red">ERROR</span>
+          </div>
+          <div className="terminal-body text-neon-red/80">
+            <TerminalLine prefix="!" color="text-neon-red">{error.message}</TerminalLine>
           </div>
         </div>
       )}
 
-      <AnimatePresence mode="popLayout">
-        {current && (
-          <motion.div
-            key={current.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full"
-          >
-            <Card className="border-primary/20 shadow-xl shadow-primary/5 bg-gradient-to-b from-card to-background">
-              <CardContent className="p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <Badge variant="success">Latest Acquisition</Badge>
-                  <span className="text-xs text-muted-foreground font-mono">
-                    ID: {current.id}
-                  </span>
-                </div>
-                <p className="text-lg leading-relaxed text-foreground/90 font-serif">
-                  "{current.content}"
-                </p>
-                <div className="mt-8 pt-6 border-t border-border/50 flex flex-col sm:flex-row sm:items-center gap-4 justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Fetched {format(new Date(current.fetched_at), "PPpp")}
+      {history.length > 0 && (
+        <div className="terminal-card rounded">
+          <div className="terminal-header">
+            <span className="neon-text-amber">SESSION_LOG</span>
+            <span className="ml-auto neon-text-amber">{history.length} entries</span>
+          </div>
+          <div className="terminal-body max-h-[500px] overflow-y-auto space-y-0">
+            <AnimatePresence>
+              {history.map((p, i) => (
+                <motion.div
+                  key={`${p.id}-${i}`}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  transition={{ duration: 0.3 }}
+                  className="border-b border-border/30 last:border-0 py-2.5"
+                >
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-mono neon-text-amber">
+                      [{format(new Date(p.fetched_at), "HH:mm:ss")}]
+                    </span>
+                    <span className="text-[10px] font-mono text-muted-foreground">
+                      ID:{p.id}
+                    </span>
+                    {i === history.length - 1 && (
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-neon/10 text-neon border border-neon/20 uppercase tracking-wider">
+                        latest
+                      </span>
+                    )}
+                    <a
+                      href={p.source_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="ml-auto text-[10px] text-cyan hover:underline font-mono"
+                    >
+                      src ↗
+                    </a>
                   </div>
-                  <a href={current.source_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                    Source URL ↗
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {history.length > 1 && (
-        <div className="mt-12">
-          <h3 className="text-lg font-bold flex items-center gap-2 mb-6">
-            <History className="text-muted-foreground w-5 h-5" />
-            Session History
-          </h3>
-          <div className="grid gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-            {history.slice(1).map((p) => (
-              <Card key={p.id} className="bg-secondary/30 border-transparent hover:border-border transition-colors">
-                <CardContent className="p-5">
-                  <p className="text-sm line-clamp-2 mb-3 text-foreground/80">{p.content}</p>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="font-mono">#{p.id}</span>
-                    <span>{format(new Date(p.fetched_at), "HH:mm:ss")}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <p className="text-[12px] leading-relaxed text-foreground/70 pl-0">
+                    {p.content}
+                  </p>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            <div ref={logEndRef} />
           </div>
         </div>
       )}
 
       {history.length === 0 && !isPending && !error && (
-        <div className="py-24 text-center border-2 border-dashed border-border/50 rounded-2xl bg-secondary/10">
-          <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4 opacity-50" />
-          <h3 className="text-lg font-medium text-foreground">No content yet</h3>
-          <p className="text-muted-foreground mt-2 max-w-sm mx-auto">
-            Click the fetch button above to retrieve and index your first paragraph.
-          </p>
+        <div className="terminal-card rounded">
+          <div className="terminal-body text-center py-12">
+            <div className="text-2xl font-display neon-text opacity-20 mb-3">NO DATA</div>
+            <p className="text-[11px] text-muted-foreground font-mono">
+              Execute ingest command to retrieve first paragraph
+            </p>
+            <div className="mt-4 flex items-center justify-center gap-1 text-[11px] font-mono text-muted-foreground">
+              <span className="neon-text">$</span>
+              <span>waiting for input</span>
+              <span className="animate-blink neon-text">█</span>
+            </div>
+          </div>
         </div>
       )}
     </div>
