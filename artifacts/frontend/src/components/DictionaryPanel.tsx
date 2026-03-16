@@ -15,13 +15,13 @@ export function DictionaryPanel() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold">Dictionary</h2>
+          <h2 className="text-lg font-bold">Kennel</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Top 10 most frequent words with definitions.
+            The pup's top 10 favorite words, ranked by how often they appear.
           </p>
         </div>
         <Button onClick={() => refetch()} isLoading={isFetching}>
-          {isFetching ? "Scanning…" : "Rescan"}
+          {isFetching ? "Sniffing…" : "Re-sniff"}
         </Button>
       </div>
 
@@ -48,7 +48,7 @@ export function DictionaryPanel() {
       {data && (
         <div className="space-y-1">
           <div className="text-xs text-muted-foreground font-mono mb-4">
-            {data.meta.total_paragraphs} paragraphs analyzed
+            {data.meta.total_paragraphs} paragraphs chewed through
           </div>
 
           <AnimatePresence>
@@ -96,7 +96,7 @@ export function DictionaryPanel() {
                     {item.found && item.definition !== "definition_not_found" ? (
                       <span className="text-foreground/60">— {item.definition}</span>
                     ) : (
-                      <span className="text-muted-foreground/50">no definition</span>
+                      <span className="text-muted-foreground/50">no definition found</span>
                     )}
                   </div>
                 </motion.div>
@@ -109,7 +109,7 @@ export function DictionaryPanel() {
       {!data && !error && !isFetching && (
         <div className="py-16 text-center">
           <p className="text-sm text-muted-foreground">
-            Loading word frequencies…
+            The pup is warming up…
           </p>
         </div>
       )}

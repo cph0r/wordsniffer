@@ -83,9 +83,9 @@ export function SearchPanel() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h2 className="text-lg font-bold">Search</h2>
+        <h2 className="text-lg font-bold">Sniff</h2>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Find paragraphs containing specific words.
+          Let the pup sniff out paragraphs by scent (words).
         </p>
       </div>
 
@@ -110,7 +110,7 @@ export function SearchPanel() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={tags.length === 0 ? "Type a word, press Enter…" : "Add more…"}
+            placeholder={tags.length === 0 ? "Drop a scent, press Enter…" : "Add another scent…"}
             className="flex-1 bg-transparent border-none outline-none min-w-[120px] text-sm placeholder:text-muted-foreground"
           />
         </div>
@@ -125,7 +125,7 @@ export function SearchPanel() {
                   : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
-              OR
+              ANY SCENT
             </button>
             <button
               onClick={() => setOperator("and")}
@@ -135,12 +135,12 @@ export function SearchPanel() {
                   : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
-              AND
+              ALL SCENTS
             </button>
           </div>
 
           <Button onClick={handleSearch} disabled={tags.length === 0} isLoading={isLoading && !isFetchingNextPage}>
-            Search
+            Sniff!
           </Button>
         </div>
       </div>
@@ -155,15 +155,15 @@ export function SearchPanel() {
       {hasSearched && !isLoading && (
         <div className="space-y-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">Results</span>
+            <span className="font-medium">Trails found</span>
             <span className="text-muted-foreground font-mono text-xs">
-              {allResults.length} of {totalMatches} shown
+              {allResults.length} of {totalMatches} sniffed out
             </span>
           </div>
 
           {allResults.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-sm text-muted-foreground">No matches found.</p>
+              <p className="text-sm text-muted-foreground">No scent found. Try different words!</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -196,10 +196,10 @@ export function SearchPanel() {
                     {isFetchingNextPage ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-                        Loading…
+                        Sniffing…
                       </>
                     ) : (
-                      "Load more"
+                      "Keep sniffing"
                     )}
                   </Button>
                 </div>

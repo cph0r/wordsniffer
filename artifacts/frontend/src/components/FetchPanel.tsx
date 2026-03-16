@@ -39,12 +39,12 @@ function ParagraphCard({ p }: { p: Paragraph }) {
             {expanded ? (
               <>
                 <EyeOff className="w-3 h-3" />
-                Collapse
+                Hide
               </>
             ) : (
               <>
                 <Eye className="w-3 h-3" />
-                View
+                Peek
               </>
             )}
           </button>
@@ -55,7 +55,7 @@ function ParagraphCard({ p }: { p: Paragraph }) {
             className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
           >
             <ExternalLink className="w-3 h-3" />
-            Source
+            Trail
           </a>
         </div>
       </div>
@@ -86,11 +86,11 @@ export function FetchPanel() {
         <div>
           <h2 className="text-lg font-bold">Fetch</h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Retrieve and store paragraphs from external sources.
+            Send the pup out to retrieve a fresh paragraph.
           </p>
         </div>
         <Button onClick={handleFetch} isLoading={isPending}>
-          {isPending ? "Fetching…" : "Fetch"}
+          {isPending ? "Fetching…" : "Fetch!"}
         </Button>
       </div>
 
@@ -129,7 +129,7 @@ export function FetchPanel() {
             disabled={isFetchingNextPage}
             className="text-xs font-medium text-muted-foreground hover:text-foreground border border-border px-4 py-2 transition-colors disabled:opacity-50"
           >
-            {isFetchingNextPage ? "Loading…" : "Load more"}
+            {isFetchingNextPage ? "Digging…" : "Dig up more"}
           </button>
         </div>
       )}
@@ -137,7 +137,7 @@ export function FetchPanel() {
       {history.length === 0 && !isPending && !error && !isLoadingRecent && (
         <div className="py-16 text-center">
           <p className="text-sm text-muted-foreground">
-            No paragraphs fetched yet.
+            No bones buried yet. Hit Fetch to send the pup out!
           </p>
         </div>
       )}

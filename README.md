@@ -1,18 +1,18 @@
 # WordSniffer
 
-**Fetch. Search. Define. Repeat.**
+**Fetch. Sniff. Kennel. Good boy.**
 
-WordSniffer is a full-stack word exploration tool that pulls random paragraphs from the internet, lets you search through them with precision, and builds a living dictionary from every word it finds. Think of it as a net that catches paragraphs and a magnifying glass that inspects every word inside.
+WordSniffer is a full-stack word exploration tool with the nose of a bloodhound. It sends a pup out to fetch random paragraphs from the wild internet, sniffs through them to find words by scent, and stores its favorite finds in the kennel. Think of it as a very good dog that retrieves paragraphs and never forgets a word.
 
 ---
 
 ## What Makes It Special
 
-**Fetch** — Hit a button. Get a random paragraph from the wild internet. It lands in your database, timestamped and ready. No duplicates — WordSniffer remembers what it's already seen.
+**Fetch** — Send the pup out to retrieve a fresh paragraph from the wild internet. It buries each one in the database, timestamped and ready. No duplicates — this dog remembers what it's already fetched.
 
-**Search** — Tag words, pick AND/OR logic, and watch WordSniffer hunt through every paragraph it's ever fetched. It highlights exact word matches (not substrings — searching "java" won't match "javascript"). Results load page by page so nothing chokes.
+**Sniff** — Drop a scent (words), pick ANY SCENT / ALL SCENTS logic, and watch the pup sniff through every paragraph it's ever retrieved. It highlights exact word matches (not substrings — sniffing "java" won't turn up "javascript"). Trails load page by page so nothing chokes.
 
-**Dictionary** — WordSniffer automatically analyzes every fetched paragraph, extracts the most frequent non-trivial words, and pulls real definitions from a dictionary API. Frequency bars show you which words dominate your collection.
+**Kennel** — The pup's trophy room. WordSniffer automatically chews through every fetched paragraph, extracts the top 10 most frequent non-trivial words, and pulls real definitions from a dictionary API. Frequency bars show which words the pup digs most.
 
 ---
 

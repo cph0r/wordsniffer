@@ -3,13 +3,13 @@ import { FetchPanel } from "@/components/FetchPanel";
 import { SearchPanel } from "@/components/SearchPanel";
 import { DictionaryPanel } from "@/components/DictionaryPanel";
 import { useParagraphCount } from "@/context/CountContext";
-import { DownloadCloud, Search, BookA } from "lucide-react";
+import { Dog, Search, BookA } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { id: "fetch" as const, label: "Fetch", icon: DownloadCloud },
-  { id: "search" as const, label: "Search", icon: Search },
-  { id: "dictionary" as const, label: "Dictionary", icon: BookA },
+  { id: "fetch" as const, label: "Fetch", icon: Dog },
+  { id: "search" as const, label: "Sniff", icon: Search },
+  { id: "dictionary" as const, label: "Kennel", icon: BookA },
 ] as const;
 
 export default function Home() {
@@ -29,7 +29,7 @@ export default function Home() {
               </h1>
             </div>
             <span className="text-xs font-mono text-muted-foreground tabular-nums">
-              {totalParagraphs !== null ? `${totalParagraphs} records` : "—"}
+              {totalParagraphs !== null ? `${totalParagraphs} bones buried` : "—"}
             </span>
           </div>
         </div>
@@ -68,7 +68,7 @@ export default function Home() {
       <footer className="border-t border-border">
         <div className="max-w-3xl mx-auto w-full px-5 py-3">
           <p className="text-xs text-muted-foreground">
-            WordSniffer — FastAPI + React + PostgreSQL
+            WordSniffer — good boy finds all the words
           </p>
         </div>
       </footer>
